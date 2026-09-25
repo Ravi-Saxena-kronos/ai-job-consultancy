@@ -332,7 +332,7 @@
       msg.textContent = res.ok
         ? (data.duplicate
           ? `${data.message || 'Already on file.'} ID: ${data.seeker_id}`
-          : `Registered ${data.seeker_id}. We verify UPI then email you.`)
+          : `Registered ${data.seeker_id}. We verify payment then email your upload link.`)
         : (data.error || data.message || `Failed (${res.status})`)
       msg.style.color = res.ok ? '' : '#f87171'
       if (res.ok) {

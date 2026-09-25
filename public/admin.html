@@ -18,6 +18,8 @@
     .err { color: #f87171; }
     .warn-box { background: #422006; border: 1px solid #f59e0b; color: #fde68a; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 0.9rem; line-height: 1.45; }
     .warn-box a { color: #93c5fd; }
+    #wa-box { margin-top: 12px; }
+    #wa-text { width: 100%; min-height: 140px; padding: 10px; border-radius: 8px; border: 1px solid #2a3544; background: #0f1419; color: #e7ecf3; font-size: 0.85rem; font-family: inherit; }
   </style>
 </head>
 <body>
@@ -27,7 +29,7 @@
     <a id="live-admin-link" href="https://ai-job-consultancy.vercel.app/admin.html">https://ai-job-consultancy.vercel.app/admin.html</a>
   </div>
   <h1>Admin</h1>
-  <p class="muted">One-click UPI verify, init sheet, run job batch. Use the same secret as <code>ADMIN_SECRET</code>.</p>
+  <p class="muted">Production: seekers get <strong>email only</strong> (Resend). WhatsApp copy below is for <strong>testing</strong> when email is not set up. Secret: <code>ADMIN_SECRET</code>.</p>
 
   <div id="gate">
     <label>Admin secret</label>
@@ -36,6 +38,9 @@
   </div>
 
   <div id="panel" hidden>
+    <div class="warn-box" style="background:#14532d;border-color:#22c55e;color:#dcfce7;margin-bottom:12px">
+      <strong>Testing only (no Resend):</strong> After <strong>Verify</strong>, copy WhatsApp text manually. With Resend configured, seekers are emailed automatically — you do not need WhatsApp.
+    </div>
     <div class="warn-box" style="background:#1a2332;border-color:#2a3544;color:#e7ecf3;margin-bottom:12px">
       <strong>Verify UPI in Amazon Pay / bank app</strong> — match amount ₹<span id="fee">99</span> and UTR below.
       Wallet: <code id="upi-vpa" style="color:#93c5fd">8595066768@amazonpay</code>
@@ -45,7 +50,14 @@
     <button type="button" class="secondary" id="run">Run job process now</button>
     <button type="button" class="secondary" id="refresh">Refresh pending</button>
     <button type="button" class="secondary" id="resend">Resend email to seeker</button>
+    <button type="button" class="secondary" id="testmail">Test Resend setup</button>
     <p id="status" class="muted"></p>
+    <div id="wa-box" hidden>
+      <p class="muted"><strong>WhatsApp message</strong> — copy and send to seeker:</p>
+      <textarea id="wa-text" readonly></textarea>
+      <button type="button" class="secondary" id="copy-wa">Copy WhatsApp message</button>
+      <a class="btn secondary" id="wa-open" href="#" target="_blank" rel="noopener" style="display:inline-block;padding:10px 14px;border-radius:8px;background:#334155;color:#fff;text-decoration:none;margin-top:8px">Open WhatsApp (web)</a>
+    </div>
     <p id="empty-help" class="muted" hidden style="margin-top:8px;line-height:1.45">
       No rows means nobody completed <strong>Step 2</strong> on
       <a href="https://ai-job-consultancy.vercel.app/">the live site</a> yet (or all are already verified).
@@ -98,6 +110,22 @@
       const vpa = document.getElementById('upi-vpa').textContent
       navigator.clipboard.writeText(vpa)
     }
+    function showWhatsApp(text, phone) {
+      const box = document.getElementById('wa-box')
+      const ta = document.getElementById('wa-text')
+      ta.value = text
+      box.hidden = false
+      const wa = document.getElementById('wa-open')
+      if (phone) {
+        wa.href = 'https://wa.me/' + phone.replace(/\D/g, '') + '?text=' + encodeURIComponent(text)
+      } else {
+        wa.href = 'https://wa.me/?text=' + encodeURIComponent(text)
+      }
+    }
+    document.getElementById('copy-wa').onclick = () => {
+      navigator.clipboard.writeText(document.getElementById('wa-text').value)
+      document.getElementById('copy-wa').textContent = 'Copied'
+    }
     async function loadPending() {
       status.textContent = 'Loading…'
       let res, data
@@ -120,9 +148,27 @@
         const btn = document.createElement('button')
         btn.textContent = 'Verify'
         btn.onclick = () => verify(p)
+        const waBtn = document.createElement('button')
+        waBtn.textContent = 'WhatsApp'
+        waBtn.className = 'secondary'
+        waBtn.style.marginLeft = '4px'
+        waBtn.onclick = () => copyWhatsAppFor(p.seeker_id)
         tr.lastElementChild.appendChild(btn)
+        tr.lastElementChild.appendChild(waBtn)
         rows.appendChild(tr)
       }
+    }
+    async function copyWhatsAppFor(seekerId) {
+      const res = await apiFetch('/api/admin/whatsapp?seeker_id=' + encodeURIComponent(seekerId), { headers: authHeaders() })
+      const data = await res.json()
+      if (!res.ok) {
+        status.textContent = data.error || 'Failed'
+        status.className = 'err'
+        return
+      }
+      showWhatsApp(data.whatsapp_message)
+      status.textContent = 'WhatsApp text ready — copy and send'
+      status.className = 'ok'
     }
     async function verify(p) {
       const res = await apiFetch('/api/admin/verify_payment', {
@@ -130,9 +176,15 @@
         body: JSON.stringify({ seeker_id: p.seeker_id, email: p.email, name: p.name, utr: p.utr })
       })
       const data = await res.json()
-      status.textContent = res.ok ? 'Verified ' + p.seeker_id : (data.error || 'Failed')
-      status.className = res.ok ? 'ok' : 'err'
-      if (res.ok) loadPending()
+      if (res.ok) {
+        status.textContent = 'Verified ' + p.seeker_id + (data.email_warning ? ' (email skipped — use WhatsApp)' : '')
+        status.className = 'ok'
+        if (data.whatsapp_message) showWhatsApp(data.whatsapp_message)
+        loadPending()
+      } else {
+        status.textContent = data.error || 'Failed'
+        status.className = 'err'
+      }
     }
     document.getElementById('refresh').onclick = loadPending
     document.getElementById('init').onclick = async () => {
@@ -155,6 +207,21 @@
       status.textContent = res.ok
         ? `Sent ${data.sent} to ${data.email} (${data.seeker_id})${data.resend_id ? ' id=' + data.resend_id : ''}${data.note ? ' — ' + data.note : ''}`
         : (data.error || 'Failed')
+      status.className = res.ok ? 'ok' : 'err'
+    }
+    document.getElementById('testmail').onclick = async () => {
+      const email = prompt('Send test email to (try saxenapj@gmail.com):', 'saxenapj@gmail.com')
+      if (!email) return
+      status.textContent = 'Testing Resend…'
+      const res = await apiFetch('/api/admin/test_email', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ email: email.trim() }),
+      })
+      const data = await res.json()
+      status.textContent = res.ok
+        ? `Test sent to ${data.to} from ${data.from} — Resend id: ${data.resend_id}. Check inbox + spam + resend.com/emails`
+        : ((data.error || 'Failed') + (data.hint ? ' — ' + data.hint : ''))
       status.className = res.ok ? 'ok' : 'err'
     }
     document.getElementById('run').onclick = async () => {
