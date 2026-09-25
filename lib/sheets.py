@@ -10,17 +10,17 @@ from googleapiclient.discovery import build
 from .config import env, google_service_account_info
 
 SCOPES = ["https://www.googleapis.com/auth/spreadsheets"]
-_service = None
+_sheets_api = None
 
 
-def _service():
-    global _service
-    if _service is None:
+def _get_sheets_service():
+    global _sheets_api
+    if _sheets_api is None:
         creds = service_account.Credentials.from_service_account_info(
             google_service_account_info(), scopes=SCOPES
         )
-        _service = build("sheets", "v4", credentials=creds, cache_discovery=False)
-    return _service
+        _sheets_api = build("sheets", "v4", credentials=creds, cache_discovery=False)
+    return _sheets_api
 
 
 def _sid() -> str:
@@ -45,7 +45,7 @@ def sheet_name(tab: str) -> str:
 def append_row(tab: str, values: list[Any]) -> None:
     name = sheet_name(tab) if tab in _TAB_ENV else tab
     body = {"values": [values]}
-    _service().spreadsheets().values().append(
+    _get_sheets_service().spreadsheets().values().append(
         spreadsheetId=_sid(),
         range=f"{name}!A:Z",
         valueInputOption="USER_ENTERED",
@@ -57,7 +57,7 @@ def append_row(tab: str, values: list[Any]) -> None:
 def read_all(tab: str) -> list[list[str]]:
     name = sheet_name(tab) if tab in _TAB_ENV else tab
     result = (
-        _service()
+        _get_sheets_service()
         .spreadsheets()
         .values()
         .get(spreadsheetId=_sid(), range=f"{name}!A:Z")
@@ -83,7 +83,7 @@ def update_row(tab: str, row_index: int, values: list[Any]) -> None:
     name = sheet_name(tab) if tab in _TAB_ENV else tab
     end_col = chr(ord("A") + max(len(values) - 1, 0))
     cell_range = f"{name}!A{row_index}:{end_col}{row_index}"
-    _service().spreadsheets().values().update(
+    _get_sheets_service().spreadsheets().values().update(
         spreadsheetId=_sid(),
         range=cell_range,
         valueInputOption="USER_ENTERED",
@@ -113,7 +113,7 @@ def ensure_workbook_tabs() -> dict[str, str]:
     from . import sheet_schema
 
     sid = _sid()
-    meta = _service().spreadsheets().get(spreadsheetId=sid).execute()
+    meta = _get_sheets_service().spreadsheets().get(spreadsheetId=sid).execute()
     existing = {s["properties"]["title"] for s in meta.get("sheets", [])}
     requests = []
     for tab_key in sheet_schema.TAB_SPECS:
@@ -121,7 +121,7 @@ def ensure_workbook_tabs() -> dict[str, str]:
         if title not in existing:
             requests.append({"addSheet": {"properties": {"title": title}}})
     if requests:
-        _service().spreadsheets().batchUpdate(
+        _get_sheets_service().spreadsheets().batchUpdate(
             spreadsheetId=sid, body={"requests": requests}
         ).execute()
 
@@ -131,7 +131,7 @@ def ensure_workbook_tabs() -> dict[str, str]:
         report[tab_key] = title
         rows = read_all(tab_key) if title in existing or requests else []
         if not rows:
-            _service().spreadsheets().values().update(
+            _get_sheets_service().spreadsheets().values().update(
                 spreadsheetId=sid,
                 range=f"{title}!A1",
                 valueInputOption="USER_ENTERED",

@@ -316,7 +316,10 @@
       }
       const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()
-      msg.textContent = res.ok ? `Registered ${data.seeker_id}. We verify UPI then email you.` : (data.error || 'Failed')
+      msg.textContent = res.ok
+        ? `Registered ${data.seeker_id}. We verify UPI then email you.`
+        : (data.error || data.message || `Failed (${res.status})`)
+      msg.style.color = res.ok ? '' : '#f87171'
     }
     document.getElementById('up').onsubmit = async (e) => {
       e.preventDefault()
