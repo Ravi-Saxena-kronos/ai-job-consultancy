@@ -38,16 +38,47 @@ class handler(BaseHTTPRequestHandler):
                 return
 
             payment = (row.get("payment_status") or "").lower()
+            if kind == "verified":
+                msg_id = email_send.payment_verified_email(email, seeker_id)
+                send_json(
+                    self,
+                    200,
+                    {
+                        "ok": True,
+                        "sent": "payment_verified",
+                        "seeker_id": seeker_id,
+                        "email": email,
+                        "resend_id": msg_id,
+                    },
+                )
+                return
             if kind == "receipt" or (kind == "auto" and payment != "verified"):
-                email_send.receipt_email(email, seeker_id, row.get("utr") or "")
-                send_json(self, 200, {"ok": True, "sent": "receipt", "seeker_id": seeker_id, "email": email})
+                msg_id = email_send.receipt_email(email, seeker_id, row.get("utr") or "")
+                send_json(
+                    self,
+                    200,
+                    {
+                        "ok": True,
+                        "sent": "receipt",
+                        "seeker_id": seeker_id,
+                        "email": email,
+                        "resend_id": msg_id,
+                        "note": "Sheet still pending — use Verify or resend with kind=verified for upload link mail",
+                    },
+                )
                 return
 
-            email_send.payment_verified_email(email, seeker_id)
+            msg_id = email_send.payment_verified_email(email, seeker_id)
             send_json(
                 self,
                 200,
-                {"ok": True, "sent": "payment_verified", "seeker_id": seeker_id, "email": email},
+                {
+                    "ok": True,
+                    "sent": "payment_verified",
+                    "seeker_id": seeker_id,
+                    "email": email,
+                    "resend_id": msg_id,
+                },
             )
         except Exception as err:
             send_json(self, 500, {"error": str(err)})

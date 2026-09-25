@@ -142,17 +142,18 @@
       status.className = res.ok ? 'ok' : 'err'
     }
     document.getElementById('resend').onclick = async () => {
-      const email = prompt('Seeker email to resend mail (e.g. saxenapj@gmail.com):')
+      const email = prompt('Seeker email (e.g. saxenapj@gmail.com):')
       if (!email) return
+      const verified = confirm('Send PAYMENT VERIFIED + upload link?\n\nOK = verified mail\nCancel = receipt / pending mail only')
       status.textContent = 'Sending…'
       const res = await apiFetch('/api/admin/resend_email', {
         method: 'POST',
         headers: authHeaders(),
-        body: JSON.stringify({ email: email.trim(), kind: 'auto' }),
+        body: JSON.stringify({ email: email.trim(), kind: verified ? 'verified' : 'auto' }),
       })
       const data = await res.json()
       status.textContent = res.ok
-        ? `Sent ${data.sent} to ${data.email} (${data.seeker_id})`
+        ? `Sent ${data.sent} to ${data.email} (${data.seeker_id})${data.resend_id ? ' id=' + data.resend_id : ''}${data.note ? ' — ' + data.note : ''}`
         : (data.error || 'Failed')
       status.className = res.ok ? 'ok' : 'err'
     }

@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 import json
+import urllib.error
 import urllib.request
 
 from .config import env
 
 
-def send_email(to: str, subject: str, text: str) -> None:
+def send_email(to: str, subject: str, text: str) -> str:
+    """Send via Resend. Returns Resend message id on success."""
     key = env("RESEND_API_KEY")
     from_addr = env("EMAIL_FROM")
     if not key or not from_addr:
-        raise RuntimeError("RESEND_API_KEY and EMAIL_FROM must be set")
+        raise RuntimeError("RESEND_API_KEY and EMAIL_FROM must be set on Vercel")
 
     body = json.dumps(
         {
@@ -31,9 +33,17 @@ def send_email(to: str, subject: str, text: str) -> None:
         },
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        if resp.status >= 300:
-            raise RuntimeError(f"Resend failed: {resp.status} {resp.read().decode()}")
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            raw = resp.read().decode()
+    except urllib.error.HTTPError as err:
+        detail = err.read().decode()
+        raise RuntimeError(f"Resend HTTP {err.code}: {detail}") from err
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError:
+        return raw or "ok"
+    return str(data.get("id") or data.get("message_id") or "ok")
 
 
 def _upload_url(seeker_id: str) -> str:
@@ -43,9 +53,9 @@ def _upload_url(seeker_id: str) -> str:
     return f"{base}/?seeker_id={seeker_id}#upload"
 
 
-def receipt_email(seeker_email: str, seeker_id: str, utr: str) -> None:
+def receipt_email(seeker_email: str, seeker_id: str, utr: str) -> str:
     fee = env("REGISTRATION_FEE_INR", "99")
-    send_email(
+    return send_email(
         seeker_email,
         f"Registration received — Rs {fee}",
         f"Hi,\n\nWe received your registration (ID {seeker_id}). "
@@ -55,9 +65,9 @@ def receipt_email(seeker_email: str, seeker_id: str, utr: str) -> None:
     )
 
 
-def payment_verified_email(seeker_email: str, seeker_id: str) -> None:
+def payment_verified_email(seeker_email: str, seeker_id: str) -> str:
     link = _upload_url(seeker_id)
-    send_email(
+    return send_email(
         seeker_email,
         "Payment verified — upload resume",
         f"Hi,\n\nYour registration payment is verified. Your seeker ID is {seeker_id}.\n\n"
