@@ -26,6 +26,21 @@
     .plans li { margin-left: 1.2rem; color: var(--muted); margin-bottom: 4px; }
     #msg { margin-top: 10px; font-size: 0.9rem; color: var(--muted); }
     .fee { font-size: 1.4rem; font-weight: 600; color: #22c55e; }
+    .steps { list-style: none; counter-reset: step; padding: 0; }
+    .steps li { counter-increment: step; position: relative; padding: 0 0 14px 2.4rem; font-size: 0.92rem; color: var(--text); }
+    .steps li:last-child { padding-bottom: 0; }
+    .steps li::before {
+      content: counter(step);
+      position: absolute; left: 0; top: 0;
+      width: 1.6rem; height: 1.6rem; line-height: 1.6rem; text-align: center;
+      font-size: 0.75rem; font-weight: 700;
+      background: var(--accent); color: #fff; border-radius: 50%;
+    }
+    .steps li strong { display: block; margin-bottom: 2px; }
+    .steps li span { color: var(--muted); font-size: 0.88rem; }
+    .steps-note { margin-top: 12px; padding-top: 12px; border-top: 1px solid #2a3544; font-size: 0.85rem; color: var(--muted); }
+    .nav-hint { font-size: 0.85rem; margin-top: 8px; }
+    .nav-hint a { color: #93c5fd; }
   </style>
 </head>
 <body>
@@ -35,6 +50,49 @@
 
     <div class="card disclaimer">
       <strong>We do not guarantee HR contact or selection.</strong>
+    </div>
+
+    <div class="card" id="instructions">
+      <h2>Instructions — how this app works</h2>
+      <p class="muted" style="margin-bottom:14px">Everything runs by <strong>email</strong>. We do not call you on phone. Follow these steps in order.</p>
+      <ol class="steps">
+        <li>
+          <strong>Pay registration fee (₹99)</strong>
+          <span>Use GPay, PhonePe, Paytm, or Amazon Pay. Pay to the UPI ID shown in Step 1 below. Save the <strong>UTR / reference number</strong> from your payment app.</span>
+        </li>
+        <li>
+          <strong>Register on this website</strong>
+          <span>Fill Step 2 with your name, email, and UTR. You get a <strong>Seeker ID</strong> (e.g. APS-XXXXXX). We match your UTR with our bank record. This usually takes a short time after payment.</span>
+        </li>
+        <li>
+          <strong>Wait for payment confirmation email</strong>
+          <span>When payment is verified, we email you at the address you gave. That mail has your Seeker ID and a link to upload your resume. You cannot upload until payment is verified.</span>
+        </li>
+        <li>
+          <strong>Upload resume and job preferences</strong>
+          <span>In Step 3, enter Seeker ID, same email, target role, experience, location, and a <strong>resume link</strong> (Google Drive or PDF URL anyone can open). We store your profile for matching.</span>
+        </li>
+        <li>
+          <strong>AI finds matching job openings</strong>
+          <span>Our system searches public job listings (for example via Adzuna) for roles that fit your role, location, and domain. We do <strong>not</strong> log in to LinkedIn or auto-apply on portals for you.</span>
+        </li>
+        <li>
+          <strong>We email companies only when careers email is verified</strong>
+          <span>For each match, we check for a verified company careers or HR email. If we find one, we send your application with your consent. If there is no verified email, we skip that company — you are <strong>not</strong> notified for skipped ones.</span>
+        </li>
+        <li>
+          <strong>You get email only when your resume was sent</strong>
+          <span>When your resume is actually emailed to a verified careers address, we notify you with company name and role reference. No email means we did not send to HR for that attempt.</span>
+        </li>
+        <li>
+          <strong>Track progress</strong>
+          <span>Your registration includes a limited number of company outreach attempts. Extra packs (5 / 10 / 15 companies) may be added later. All updates stay on email.</span>
+        </li>
+      </ol>
+      <p class="steps-note">
+        <strong>What we never do:</strong> guarantee interview or job, use LinkedIn login bots, or apply on job portals without a proper careers email path.
+      </p>
+      <p class="nav-hint">Start here: <a href="#upi-card">Step 1 — Pay</a> · <a href="#step-register">Step 2 — Register</a> · <a href="#upload">Step 3 — Resume</a></p>
     </div>
 
     <div class="card" id="online-pay-card" hidden>
@@ -66,7 +124,7 @@
       <p class="muted">In GPay / PhonePe / Paytm: Pay → UPI ID → paste above → amount <span id="fee2">₹99</span>.</p>
     </div>
 
-    <div class="card">
+    <div class="card" id="step-register">
       <h2>Step 2 — Register (after UPI pay)</h2>
       <form id="reg">
         <label for="name">Full name</label>
