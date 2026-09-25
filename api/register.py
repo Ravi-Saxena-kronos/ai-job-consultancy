@@ -80,7 +80,13 @@ class handler(BaseHTTPRequestHandler):
                 },
             )
         except Exception as err:
-            send_json(self, 500, {"error": str(err)})
+            msg = str(err)
+            if "GOOGLE_SERVICE_ACCOUNT_JSON" in msg or "Extra data" in msg:
+                msg = (
+                    "Server setup error (Google credentials). "
+                    "Fix GOOGLE_SERVICE_ACCOUNT_JSON in Vercel: one line only, no text after the closing }."
+                )
+            send_json(self, 500, {"error": msg})
 
     def do_GET(self) -> None:
         send_json(self, 200, {"service": "register", "method": "POST"})

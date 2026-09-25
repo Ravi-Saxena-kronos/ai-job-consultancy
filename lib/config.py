@@ -48,8 +48,41 @@ def default_posts_remaining() -> int:
         return 5
 
 
+def _parse_service_account_json(raw: str) -> dict:
+    """Parse service account JSON from Vercel env (often one line, sometimes with trailing junk)."""
+    text = raw.strip()
+    if not text:
+        raise RuntimeError("GOOGLE_SERVICE_ACCOUNT_JSON is empty")
+    # Double-encoded JSON string in env
+    if text.startswith('"') and text.endswith('"'):
+        try:
+            unquoted = json.loads(text)
+            if isinstance(unquoted, str):
+                text = unquoted.strip()
+        except json.JSONDecodeError:
+            pass
+    try:
+        data = json.loads(text)
+    except json.JSONDecodeError as err:
+        if "Extra data" in err.msg:
+            data, _end = json.JSONDecoder().raw_decode(text)
+        else:
+            start, end = text.find("{"), text.rfind("}")
+            if start < 0 or end <= start:
+                raise RuntimeError(
+                    "GOOGLE_SERVICE_ACCOUNT_JSON is not valid JSON. "
+                    "Paste the full key file as one line in Vercel (no extra text after the closing brace)."
+                ) from err
+            data = json.loads(text[start : end + 1])
+    if not isinstance(data, dict):
+        raise RuntimeError("GOOGLE_SERVICE_ACCOUNT_JSON must be a JSON object")
+    if not data.get("client_email"):
+        raise RuntimeError("GOOGLE_SERVICE_ACCOUNT_JSON missing client_email")
+    return data
+
+
 def google_service_account_info() -> dict:
     raw = env("GOOGLE_SERVICE_ACCOUNT_JSON")
     if not raw:
         raise RuntimeError("GOOGLE_SERVICE_ACCOUNT_JSON is not set")
-    return json.loads(raw)
+    return _parse_service_account_json(raw)
