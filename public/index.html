@@ -317,7 +317,9 @@
       const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       const data = await res.json()
       msg.textContent = res.ok
-        ? `Registered ${data.seeker_id}. We verify UPI then email you.`
+        ? (data.duplicate
+          ? `${data.message || 'Already on file.'} ID: ${data.seeker_id}`
+          : `Registered ${data.seeker_id}. We verify UPI then email you.`)
         : (data.error || data.message || `Failed (${res.status})`)
       msg.style.color = res.ok ? '' : '#f87171'
     }

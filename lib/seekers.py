@@ -11,6 +11,22 @@ def all_seeker_rows() -> list[dict[str, str]]:
     return sheets.rows_as_dicts("SEEKERS")
 
 
+def normalize_utr(utr: str) -> str:
+    return "".join(ch for ch in (utr or "").strip() if not ch.isspace())
+
+
+def latest_by_utr(utr: str) -> Optional[dict[str, str]]:
+    want = normalize_utr(utr)
+    if not want:
+        return None
+    matches = [
+        r
+        for r in all_seeker_rows()
+        if normalize_utr(r.get("utr") or "") == want
+    ]
+    return matches[-1] if matches else None
+
+
 def latest_by_id(seeker_id: str) -> Optional[dict[str, str]]:
     seeker_id = seeker_id.strip()
     matches = [r for r in all_seeker_rows() if (r.get("seeker_id") or "").strip() == seeker_id]
