@@ -11,7 +11,8 @@ Google Cloud → Service account → JSON key → share sheet with `client_email
 1. [vercel.com/new](https://vercel.com/new) → import Git repo  
 2. **Root Directory:** `.` (this repo) or `ai-job-consultancy` if monorepo  
 3. **Framework Preset:** **Other** (repo sets `"framework": null` in `vercel.json` — do **not** pick FastAPI/Python preset or build fails with “No python entrypoint”)  
-4. Environment variables from `.env.example` (Production):
+4. **Build & Development Settings:** leave **Install Command** empty (defaults). Do not set a custom install command that runs `pip` at root — Vercel installs Python deps per function.  
+5. Environment variables from `.env.example` (Production):
 
 | Variable | Required |
 |----------|----------|
@@ -24,7 +25,7 @@ Google Cloud → Service account → JSON key → share sheet with `client_email
 | CRON_SECRET | yes |
 | UPI_VPA | default 8595066768@amazonpay |
 
-5. Deploy
+6. Deploy
 
 ## 3. Smoke test
 

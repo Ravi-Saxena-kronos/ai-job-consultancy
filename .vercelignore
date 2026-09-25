@@ -1,0 +1,7 @@
+tests/
+scripts/
+docs/
+web/
+build_*.py
+*.md
+.git/
