@@ -43,9 +43,9 @@ def upi_payee_name() -> str:
 
 def default_posts_remaining() -> int:
     try:
-        return int(env("DEFAULT_POSTS_REMAINING", "10"))
+        return int(env("DEFAULT_POSTS_REMAINING", "5"))
     except ValueError:
-        return 10
+        return 5
 
 
 def google_service_account_info() -> dict:

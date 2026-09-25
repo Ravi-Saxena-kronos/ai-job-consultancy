@@ -24,6 +24,12 @@
     input, select, textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #2a3544; background: #0f1419; color: var(--text); }
     button { width: 100%; margin-top: 14px; padding: 12px; border: none; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 600; cursor: pointer; }
     .plans li { margin-left: 1.2rem; color: var(--muted); margin-bottom: 4px; }
+    .price-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 8px; }
+    .price-table th, .price-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #2a3544; }
+    .price-table th { color: var(--muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
+    .price-table td:last-child { text-align: right; white-space: nowrap; color: #22c55e; font-weight: 600; }
+    .price-table tr.highlight td { background: rgba(59, 130, 246, 0.08); }
+    .pack-note { font-size: 0.85rem; color: var(--muted); margin-top: 12px; line-height: 1.45; }
     #msg { margin-top: 10px; font-size: 0.9rem; color: var(--muted); }
     .fee { font-size: 1.4rem; font-weight: 600; color: #22c55e; }
     .steps { list-style: none; counter-reset: step; padding: 0; }
@@ -74,7 +80,7 @@
         </li>
         <li>
           <strong>AI finds matching job openings</strong>
-          <span>Our system searches public job listings (for example via Adzuna) for roles that fit your role, location, and domain. We do <strong>not</strong> log in to LinkedIn or auto-apply on portals for you.</span>
+          <span>Our system searches job listings for roles that fit your role, location, and domain. We can <strong>apply your resume to top companies</strong> according to your role when a verified careers path is available.</span>
         </li>
         <li>
           <strong>We email companies only when careers email is verified</strong>
@@ -86,11 +92,11 @@
         </li>
         <li>
           <strong>Track progress</strong>
-          <span>Your registration includes a limited number of company outreach attempts. Extra packs (5 / 10 / 15 companies) may be added later. All updates stay on email.</span>
+          <span>After registration you get <strong>5 company auto-applies</strong> included. Need more? See <a href="#auto-apply-plans">auto-apply plans</a> below. All updates stay on email.</span>
         </li>
       </ol>
       <p class="steps-note">
-        <strong>What we never do:</strong> guarantee interview or job, use LinkedIn login bots, or apply on job portals without a proper careers email path.
+        <strong>What we never do:</strong> guarantee interview or job. We only apply where a verified company careers or HR email path exists.
       </p>
       <p class="nav-hint">Start here: <a href="#upi-card">Step 1 — Pay</a> · <a href="#step-register">Step 2 — Register</a> · <a href="#upload">Step 3 — Resume</a></p>
     </div>
@@ -138,13 +144,45 @@
       <p id="msg"></p>
     </div>
 
-    <div class="card">
-      <h2>Plans</h2>
-      <ul class="plans">
-        <li>Registration — ₹99</li>
-        <li>POST-5 / POST-10 / POST-15 — outreach packs (pricing TBD)</li>
-      </ul>
-      <p class="muted" style="margin-top:10px">You are emailed only when your resume is sent to a verified HR/careers address.</p>
+    <div class="card" id="auto-apply-plans">
+      <h2>Auto-apply plans &amp; pricing</h2>
+      <p class="muted">Registration starts your profile. We then auto-apply your resume to <strong>top companies</strong> matched to your role (when a verified careers email exists).</p>
+      <table class="price-table" aria-label="Pricing">
+        <thead>
+          <tr><th>Plan</th><th>Auto-applies</th><th>Price</th></tr>
+        </thead>
+        <tbody>
+          <tr class="highlight">
+            <td><strong>Registration</strong> (required first)</td>
+            <td>5 companies included</td>
+            <td>₹99</td>
+          </tr>
+          <tr>
+            <td>POST-10 pack</td>
+            <td>10 auto-applies</td>
+            <td>₹499</td>
+          </tr>
+          <tr>
+            <td>POST-15 pack</td>
+            <td>15 auto-applies</td>
+            <td>₹699</td>
+          </tr>
+          <tr>
+            <td>POST-20 pack</td>
+            <td>20 auto-applies</td>
+            <td>₹899</td>
+          </tr>
+          <tr>
+            <td>POST-30 pack</td>
+            <td>30 auto-applies</td>
+            <td>₹1,299</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="pack-note">
+        <strong>How to buy extra packs:</strong> Pay the pack amount to the same UPI ID as registration. In the payment note / message, write your <strong>Seeker ID</strong> and pack name (e.g. POST-10). Email us the UTR at the address on your receipt — we add auto-applies to your account after verification.
+      </p>
+      <p class="muted" style="margin-top:10px">You are emailed only when your resume is sent to a verified HR/careers address. Skipped companies (no verified email) do not use your pack balance.</p>
     </div>
 
     <div class="card" id="upload">
