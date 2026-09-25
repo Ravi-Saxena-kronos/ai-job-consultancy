@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin — AI Job Consultancy</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0f1419; color: #e7ecf3; padding: 20px; max-width: 720px; margin: 0 auto; }
+    h1 { font-size: 1.4rem; }
+    .muted { color: #8b98a8; font-size: 0.9rem; }
+    input { width: 100%; padding: 10px; margin: 8px 0 16px; border-radius: 8px; border: 1px solid #2a3544; background: #1a2332; color: #fff; }
+    button { padding: 10px 14px; border: none; border-radius: 8px; background: #3b82f6; color: #fff; cursor: pointer; margin-right: 8px; margin-top: 8px; }
+    button.secondary { background: #334155; }
+    table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 0.9rem; }
+    th, td { text-align: left; padding: 8px; border-bottom: 1px solid #2a3544; }
+    #gate { margin-bottom: 24px; }
+    .ok { color: #22c55e; }
+    .err { color: #f87171; }
+  </style>
+</head>
+<body>
+  <h1>Admin</h1>
+  <p class="muted">One-click UPI verify, init sheet, run job batch. Use the same secret as <code>ADMIN_SECRET</code>.</p>
+
+  <div id="gate">
+    <label>Admin secret</label>
+    <input type="password" id="secret" placeholder="Bearer token" autocomplete="off">
+    <button type="button" id="save">Unlock</button>
+  </div>
+
+  <div id="panel" hidden>
+    <button type="button" id="init">Init Google Sheet tabs</button>
+    <button type="button" class="secondary" id="run">Run job process now</button>
+    <button type="button" class="secondary" id="refresh">Refresh pending</button>
+    <p id="status" class="muted"></p>
+    <table>
+      <thead><tr><th>ID</th><th>Name</th><th>Email</th><th>UTR</th><th></th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const status = document.getElementById('status')
+    const rows = document.getElementById('rows')
+    function token() { return sessionStorage.getItem('admin_secret') || '' }
+    function authHeaders() {
+      return { Authorization: 'Bearer ' + token(), 'Content-Type': 'application/json' }
+    }
+    document.getElementById('save').onclick = () => {
+      sessionStorage.setItem('admin_secret', document.getElementById('secret').value.trim())
+      document.getElementById('panel').hidden = false
+      loadPending()
+    }
+    if (token()) {
+      document.getElementById('secret').value = token()
+      document.getElementById('panel').hidden = false
+      loadPending()
+    }
+    async function loadPending() {
+      status.textContent = 'Loading…'
+      const res = await fetch('/api/admin/pending', { headers: authHeaders() })
+      const data = await res.json()
+      if (!res.ok) { status.textContent = data.error || 'Failed'; status.className = 'err'; return }
+      status.textContent = data.count + ' pending payment(s)'
+      status.className = 'muted'
+      rows.innerHTML = ''
+      for (const p of data.pending || []) {
+        const tr = document.createElement('tr')
+        tr.innerHTML = `<td>${p.seeker_id}</td><td>${p.name}</td><td>${p.email}</td><td>${p.utr}</td><td></td>`
+        const btn = document.createElement('button')
+        btn.textContent = 'Verify'
+        btn.onclick = () => verify(p)
+        tr.lastElementChild.appendChild(btn)
+        rows.appendChild(tr)
+      }
+    }
+    async function verify(p) {
+      const res = await fetch('/api/admin/verify_payment', {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ seeker_id: p.seeker_id, email: p.email, name: p.name, utr: p.utr })
+      })
+      const data = await res.json()
+      status.textContent = res.ok ? 'Verified ' + p.seeker_id : (data.error || 'Failed')
+      status.className = res.ok ? 'ok' : 'err'
+      if (res.ok) loadPending()
+    }
+    document.getElementById('refresh').onclick = loadPending
+    document.getElementById('init').onclick = async () => {
+      const res = await fetch('/api/admin/init_sheet', { method: 'POST', headers: authHeaders() })
+      const data = await res.json()
+      status.textContent = res.ok ? 'Sheet ready' : (data.error || 'Failed')
+      status.className = res.ok ? 'ok' : 'err'
+    }
+    document.getElementById('run').onclick = async () => {
+      status.textContent = 'Running batch…'
+      const res = await fetch('/api/cron/process', { headers: authHeaders() })
+      const data = await res.json()
+      status.textContent = res.ok ? 'Batch done' : (data.error || 'Failed')
+      status.className = res.ok ? 'ok' : 'err'
+    }
+  </script>
+</body>
+</html>

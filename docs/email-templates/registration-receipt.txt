@@ -1,0 +1,16 @@
+Subject: Registration confirmed — Rs 99 received
+
+Hi {{seeker_first_name}},
+
+Thank you for registering with AI Job Consultancy.
+
+Amount paid: Rs 99
+Transaction: {{razorpay_payment_id}}
+Email on file: {{seeker_email}}
+
+Next step: upload your resume PDF from the link in this email (magic link):
+{{upload_link}}
+
+We communicate only by email — no phone number is required for this service.
+
+— AI Job Consultancy

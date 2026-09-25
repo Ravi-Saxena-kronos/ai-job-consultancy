@@ -1,0 +1,6 @@
+.env
+public/payment-qr.png
+*-service-account*.json
+__pycache__/
+*.pyc
+.venv/

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Job Consultancy</title>
+  <style>
+    :root { --bg:#0f1419; --card:#1a2332; --text:#e7ecf3; --muted:#8b98a8; --accent:#3b82f6; --warn:#f59e0b; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 20px 16px 48px; line-height: 1.5; }
+    main { max-width: 520px; margin: 0 auto; }
+    h1 { font-size: 1.6rem; margin-bottom: 6px; }
+    .muted { color: var(--muted); font-size: 0.95rem; margin-bottom: 20px; }
+    .card { background: var(--card); border: 1px solid #2a3544; border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+    h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 12px; }
+    .disclaimer { border-left: 3px solid var(--warn); padding-left: 12px; font-size: 0.9rem; color: var(--muted); }
+    .upi-box { background: #0f1419; border: 1px dashed #3b82f6; border-radius: 10px; padding: 14px; margin: 12px 0; text-align: center; }
+    .upi-id { font-family: ui-monospace, monospace; font-size: 1.05rem; color: #93c5fd; word-break: break-all; }
+    .upi-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .upi-actions button, .upi-actions a.btn { flex: 1; min-width: 120px; text-align: center; margin-top: 0; padding: 10px; border-radius: 8px; text-decoration: none; font-size: 0.9rem; }
+    a.btn { background: #334155; color: #fff; display: inline-block; }
+    button.secondary { background: #334155; }
+    label { display: block; font-size: 0.85rem; color: var(--muted); margin: 10px 0 4px; }
+    input, select, textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #2a3544; background: #0f1419; color: var(--text); }
+    button { width: 100%; margin-top: 14px; padding: 12px; border: none; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 600; cursor: pointer; }
+    .plans li { margin-left: 1.2rem; color: var(--muted); margin-bottom: 4px; }
+    #msg { margin-top: 10px; font-size: 0.9rem; color: var(--muted); }
+    .fee { font-size: 1.4rem; font-weight: 600; color: #22c55e; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>AI Job Consultancy</h1>
+    <p class="muted">Email only — no phone number. Pay ₹99 to our Amazon Pay UPI wallet, upload resume, we outreach when a verified careers email exists.</p>
+
+    <div class="card disclaimer">
+      <strong>We do not guarantee HR contact or selection.</strong>
+    </div>
+
+    <div class="card" id="online-pay-card" hidden>
+      <h2>Step 1 — Pay online (automatic)</h2>
+      <p class="fee" id="fee-online">₹99</p>
+      <p class="muted">UPI / card — payment verifies instantly. No manual UTR check.</p>
+      <form id="checkout">
+        <label for="name0">Full name</label>
+        <input id="name0" required autocomplete="name">
+        <label for="email0">Email</label>
+        <input id="email0" type="email" required autocomplete="email">
+        <button type="submit">Pay and register</button>
+      </form>
+      <p id="msg0" class="muted"></p>
+    </div>
+
+    <div class="card" id="upi-card">
+      <h2>Step 1 — Pay registration (Amazon Pay UPI)</h2>
+      <p class="fee" id="fee">₹99</p>
+      <p class="muted">Pay via <strong>Amazon Pay</strong> or any UPI app to this wallet ID, then enter UTR in Step 2.</p>
+      <div class="upi-box">
+        <p class="muted" style="margin-bottom:8px">Amazon Pay UPI ID</p>
+        <p class="upi-id" id="upi-vpa">8595066768@amazonpay</p>
+        <div class="upi-actions">
+          <button type="button" class="secondary" id="copy-upi">Copy UPI ID</button>
+          <a class="btn" id="upi-pay" href="#">Pay with UPI app</a>
+        </div>
+      </div>
+      <p class="muted">In GPay / PhonePe / Paytm: Pay → UPI ID → paste above → amount <span id="fee2">₹99</span>.</p>
+    </div>
+
+    <div class="card">
+      <h2>Step 2 — Register (after UPI pay)</h2>
+      <form id="reg">
+        <label for="name">Full name</label>
+        <input id="name" name="name" required autocomplete="name">
+        <label for="email">Email (all updates here)</label>
+        <input id="email" name="email" type="email" required autocomplete="email">
+        <label for="utr">UPI reference / UTR</label>
+        <input id="utr" name="utr" required placeholder="12-digit UTR from payment app">
+        <button type="submit">Submit registration</button>
+      </form>
+      <p id="msg"></p>
+    </div>
+
+    <div class="card">
+      <h2>Plans</h2>
+      <ul class="plans">
+        <li>Registration — ₹99</li>
+        <li>POST-5 / POST-10 / POST-15 — outreach packs (pricing TBD)</li>
+      </ul>
+      <p class="muted" style="margin-top:10px">You are emailed only when your resume is sent to a verified HR/careers address.</p>
+    </div>
+
+    <div class="card" id="upload">
+      <h2>Step 3 — Resume (after we verify payment)</h2>
+      <form id="up">
+        <label for="sid">Seeker ID (from email)</label>
+        <input id="sid" name="seeker_id" required>
+        <label for="email2">Email</label>
+        <input id="email2" name="email" type="email" required>
+        <label for="role">Target role</label>
+        <input id="role" name="target_role" placeholder="Java Developer" required>
+        <label for="exp">Experience (years)</label>
+        <input id="exp" name="experience_years" type="number" min="0" step="1">
+        <label for="loc">Location</label>
+        <input id="loc" name="location" value="Delhi NCR">
+        <label for="domain">Domain</label>
+        <select id="domain" name="domain">
+          <option>IT</option>
+          <option>Sales</option>
+          <option>Accounts</option>
+          <option>Other</option>
+        </select>
+        <label for="resume">Resume link (Google Drive / PDF URL) or note</label>
+        <textarea id="resume" name="resume_url" rows="2" required></textarea>
+        <button type="submit">Upload details</button>
+      </form>
+      <p id="msg2"></p>
+    </div>
+  </main>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    let paymentConfig = {}
+    async function loadPaymentConfig() {
+      try {
+        const res = await fetch('/api/public_config')
+        const c = await res.json()
+        if (!res.ok) return
+        paymentConfig = c
+        const amount = c.registration_fee_inr || 99
+        const vpa = c.upi_vpa || '8595066768@amazonpay'
+        document.getElementById('fee').textContent = '₹' + amount
+        document.getElementById('fee2').textContent = '₹' + amount
+        document.getElementById('fee-online').textContent = '₹' + amount
+        document.getElementById('upi-vpa').textContent = vpa
+        const link = document.getElementById('upi-pay')
+        link.href = c.upi_intent_url || ('upi://pay?pa=' + encodeURIComponent(vpa) + '&am=' + amount + '&cu=INR')
+        if (c.payment_online && c.razorpay_key_id) {
+          document.getElementById('online-pay-card').hidden = false
+        }
+      } catch (_) { /* defaults in HTML */ }
+    }
+    loadPaymentConfig()
+    const qs = new URLSearchParams(location.search)
+    if (qs.get('seeker_id')) {
+      document.getElementById('sid').value = qs.get('seeker_id')
+      document.getElementById('upload').scrollIntoView({ behavior: 'smooth' })
+    }
+    document.getElementById('checkout').onsubmit = async (e) => {
+      e.preventDefault()
+      const msg0 = document.getElementById('msg0')
+      msg0.textContent = 'Creating order…'
+      const res = await fetch('/api/payment/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: name0.value, email: email0.value })
+      })
+      const data = await res.json()
+      if (!res.ok) { msg0.textContent = data.error || 'Failed'; return }
+      if (data.already_paid) {
+        msg0.textContent = 'Already registered. Check email for upload link.'
+        document.getElementById('sid').value = data.seeker_id
+        return
+      }
+      const seekerId = data.seeker_id
+      const options = {
+        key: data.razorpay_key_id,
+        amount: data.amount_paise,
+        currency: data.currency,
+        name: 'AI Job Consultancy',
+        description: 'Registration',
+        order_id: data.order_id,
+        handler: async function (response) {
+          const conf = await fetch('/api/payment/confirm', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              seeker_id: seekerId,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            })
+          })
+          const cdata = await conf.json()
+          if (conf.ok) {
+            msg0.textContent = 'Payment verified. Check email for upload link. ID: ' + seekerId
+            document.getElementById('sid').value = seekerId
+            document.getElementById('email2').value = email0.value
+          } else {
+            msg0.textContent = cdata.error || 'Confirm failed — webhook may still verify shortly.'
+            pollPayment(seekerId, msg0)
+          }
+        },
+        prefill: { name: name0.value, email: email0.value }
+      }
+      const rzp = new Razorpay(options)
+      rzp.open()
+    }
+    async function pollPayment(seekerId, el) {
+      for (let i = 0; i < 12; i++) {
+        await new Promise(r => setTimeout(r, 5000))
+        const res = await fetch('/api/payment/status?seeker_id=' + encodeURIComponent(seekerId))
+        const data = await res.json()
+        if (data.payment_status === 'verified') {
+          el.textContent = 'Payment verified. ID: ' + seekerId
+          document.getElementById('sid').value = seekerId
+          return
+        }
+      }
+    }
+    document.getElementById('copy-upi').onclick = () => {
+      const vpa = document.getElementById('upi-vpa').textContent
+      const btn = document.getElementById('copy-upi')
+      navigator.clipboard.writeText(vpa).then(() => { btn.textContent = 'Copied' })
+    }
+    document.getElementById('reg').onsubmit = async (e) => {
+      e.preventDefault()
+      const body = {
+        name: reg.name.value,
+        email: reg.email.value,
+        utr: reg.utr.value,
+      }
+      const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const data = await res.json()
+      msg.textContent = res.ok ? `Registered ${data.seeker_id}. We verify UPI then email you.` : (data.error || 'Failed')
+    }
+    document.getElementById('up').onsubmit = async (e) => {
+      e.preventDefault()
+      const body = {
+        seeker_id: up.sid.value,
+        email: up.email2.value,
+        target_role: up.role.value,
+        experience_years: up.exp.value,
+        location: up.loc.value,
+        domain: up.domain.value,
+        resume_url: up.resume.value,
+      }
+      const res = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      const data = await res.json()
+      msg2.textContent = res.ok ? `Saved. ${data.status}` : (data.error || 'Failed')
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+Subject: Your resume was submitted — {{company_name}} ({{role_title}})
+
+Hi {{seeker_first_name}},
+
+We completed one outreach action on your AI Job Consultancy plan.
+
+Company: {{company_name}}
+Role: {{role_title}}
+Date: {{applied_date}}
+Method: {{method}}  (e.g. careers email / apply link sent to you)
+Reference: {{application_id}}
+
+If we emailed the employer on your behalf, the message was sent from our authorized desk with your resume and cover letter attached, as per your registration consent.
+
+If this action was "apply yourself", use the link below within 48 hours:
+{{apply_url}}
+
+Questions? Reply to this email — we do not use phone support.
+
+— AI Job Consultancy
+support@yourdomain.com

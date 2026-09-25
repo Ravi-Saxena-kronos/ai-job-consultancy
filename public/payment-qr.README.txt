@@ -1,0 +1,13 @@
+Place your UPI payment QR image here as:
+
+  payment-qr.png
+
+The website loads it at /payment-qr.png
+
+Do not commit this file if it contains sensitive merchant details you prefer to keep private;
+add payment-qr.png to .gitignore and upload only on Vercel / hosting.
+
+Registration fee: set REGISTRATION_FEE_INR=99 in Vercel environment variables.
+
+After the job seeker pays, they submit email + UTR on the form → /api/register.
+You verify the UPI credit in your bank app, then call /api/admin/verify_payment.

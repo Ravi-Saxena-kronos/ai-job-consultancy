@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Job Consultancy — Email only</title>
+  <style>
+    :root { --bg:#0f1419; --card:#1a2332; --text:#e7ecf3; --muted:#8b98a8; --accent:#3b82f6; --ok:#22c55e; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; padding: 24px 16px 48px; }
+    main { max-width: 640px; margin: 0 auto; }
+    h1 { font-size: 1.75rem; font-weight: 600; letter-spacing: -0.02em; margin-bottom: 8px; }
+    .tag { color: var(--muted); font-size: 0.95rem; margin-bottom: 24px; }
+    .card { background: var(--card); border-radius: 12px; padding: 20px; margin-bottom: 16px; border: 1px solid #2a3544; }
+    h2 { font-size: 1rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+    ul { padding-left: 1.2rem; color: var(--muted); }
+    li { margin-bottom: 6px; }
+    .price { font-size: 1.5rem; font-weight: 600; color: var(--ok); }
+    .note { font-size: 0.85rem; color: var(--muted); margin-top: 12px; }
+    label { display: block; font-size: 0.9rem; margin-bottom: 6px; color: var(--muted); }
+    input[type=email], input[type=file] { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #2a3544; background: #0f1419; color: var(--text); margin-bottom: 12px; }
+    button { width: 100%; padding: 14px; border: none; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 600; cursor: pointer; font-size: 1rem; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .packs { display: grid; gap: 8px; margin-top: 8px; }
+    .pack { display: flex; justify-content: space-between; padding: 10px 12px; background: #0f1419; border-radius: 8px; font-size: 0.95rem; }
+    footer { margin-top: 32px; font-size: 0.8rem; color: var(--muted); text-align: center; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>AI Job Consultancy</h1>
+    <p class="tag">Resume outreach by email — no phone number on this app.</p>
+
+    <div class="card">
+      <h2>How it works</h2>
+      <ul>
+        <li>Register with your email (magic link login).</li>
+        <li>Pay registration — <span class="price">₹99</span>.</li>
+        <li>Upload your resume (PDF).</li>
+        <li>We match roles and apply via official careers channels or send you ready-to-submit packs.</li>
+        <li>Every step is confirmed by email to you.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Outreach packs (add-on)</h2>
+      <div class="packs">
+        <div class="pack"><span>5 companies</span><span>Price TBD</span></div>
+        <div class="pack"><span>10 companies</span><span>Price TBD</span></div>
+        <div class="pack"><span>15 companies</span><span>Price TBD</span></div>
+        <div class="pack"><span>20 / 30 companies</span><span>Price TBD</span></div>
+      </div>
+      <p class="note">Preview only. Payment and upload connect to Razorpay + API in production build.</p>
+    </div>
+
+    <div class="card">
+      <h2>Start (preview form)</h2>
+      <form id="f" onsubmit="return preview(event)">
+        <label for="email">Email (only contact method)</label>
+        <input type="email" id="email" required placeholder="you@example.com" autocomplete="email">
+        <label for="resume">Resume PDF</label>
+        <input type="file" id="resume" accept=".pdf,.doc,.docx" required>
+        <button type="submit" id="btn">Continue to payment — ₹99</button>
+      </form>
+      <p class="note" id="msg"></p>
+    </div>
+
+    <footer>
+      Backend: AI Resume Post automates matching and logs each application.<br>
+      We do not automate LinkedIn login or spam HR inboxes.
+    </footer>
+  </main>
+  <script>
+    function preview(e) {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      document.getElementById('msg').textContent =
+        'Preview: next step is Razorpay checkout for ' + email + ', then upload to secure storage. Deploy web/ to go live.';
+      return false;
+    }
+  </script>
+</body>
+</html>

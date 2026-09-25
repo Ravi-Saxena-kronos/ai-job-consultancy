@@ -1,0 +1,9 @@
+Registration payment uses Amazon Pay UPI wallet (not a QR image):
+
+  8595066768@amazonpay
+
+Override on Vercel: UPI_VPA=8595066768@amazonpay
+Optional display name: UPI_PAYEE_NAME=AI Job Consultancy
+Amount: REGISTRATION_FEE_INR=99
+
+Seeker flow: any UPI app → Pay to UPI ID → enter wallet → ₹99 → copy UTR → Step 2 on site.
