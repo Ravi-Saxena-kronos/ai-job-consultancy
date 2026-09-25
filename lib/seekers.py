@@ -4,11 +4,39 @@ from __future__ import annotations
 
 from typing import Optional
 
-from . import sheets
+from . import sheet_schema, sheets
+
+
+def _is_header_row(row: list) -> bool:
+    if not row:
+        return False
+    c0 = str(row[0]).strip().lower().replace(" ", "_")
+    if c0 in ("seeker_id", "seekerid"):
+        return True
+    if len(row) > 1 and str(row[1]).strip().lower() == "email":
+        return True
+    return False
+
+
+def _row_to_seeker(row: list[str]) -> dict[str, str]:
+    """Map SEEKERS row by column position (A=seeker_id, B=email, …)."""
+    keys = sheet_schema.SEEKERS_HEADERS
+    padded = list(row) + [""] * max(0, len(keys) - len(row))
+    return {keys[i]: str(padded[i]) for i in range(len(keys))}
 
 
 def all_seeker_rows() -> list[dict[str, str]]:
-    return sheets.rows_as_dicts("SEEKERS")
+    raw = sheets.read_all("SEEKERS")
+    if not raw:
+        return []
+    out: list[dict[str, str]] = []
+    for i, row in enumerate(raw):
+        if i == 0 and _is_header_row(row):
+            continue
+        if not any(str(c).strip() for c in row):
+            continue
+        out.append(_row_to_seeker(row))
+    return out
 
 
 def normalize_utr(utr: str) -> str:

@@ -307,21 +307,40 @@
       const btn = document.getElementById('copy-upi')
       navigator.clipboard.writeText(vpa).then(() => { btn.textContent = 'Copied' })
     }
+    const regBtn = document.querySelector('#reg button[type=submit]')
     document.getElementById('reg').onsubmit = async (e) => {
       e.preventDefault()
+      if (regBtn.disabled) return
+      regBtn.disabled = true
+      regBtn.textContent = 'Submitting…'
       const body = {
         name: reg.name.value,
         email: reg.email.value,
         utr: reg.utr.value,
       }
-      const res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      const data = await res.json()
+      let res, data
+      try {
+        res = await fetch('/api/register', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        data = await res.json()
+      } catch (_) {
+        msg.textContent = 'Network error — try again'
+        msg.style.color = '#f87171'
+        regBtn.disabled = false
+        regBtn.textContent = 'Submit registration'
+        return
+      }
       msg.textContent = res.ok
         ? (data.duplicate
           ? `${data.message || 'Already on file.'} ID: ${data.seeker_id}`
           : `Registered ${data.seeker_id}. We verify UPI then email you.`)
         : (data.error || data.message || `Failed (${res.status})`)
       msg.style.color = res.ok ? '' : '#f87171'
+      if (res.ok) {
+        regBtn.textContent = 'Submitted'
+      } else {
+        regBtn.disabled = false
+        regBtn.textContent = 'Submit registration'
+      }
     }
     document.getElementById('up').onsubmit = async (e) => {
       e.preventDefault()
