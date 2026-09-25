@@ -41,6 +41,7 @@ class handler(BaseHTTPRequestHandler):
                 return
 
             posts = default_posts_remaining()
+            sheets.ensure_workbook_tabs()
             sheets.append_row(
                 "SEEKERS",
                 [

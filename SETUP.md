@@ -51,7 +51,7 @@ Copy `.env.example` → `.env` locally. On Vercel set the same variables plus:
 ```
 
 5. Seeker uploads resume → `POST /api/upload`
-6. Cron `/api/cron/process` runs matching (every 6h in vercel.json)
+6. Cron `/api/cron/process` runs matching **once per day** on Vercel Hobby (see `vercel.json`)
 
 ## 8. Candidate email rule
 

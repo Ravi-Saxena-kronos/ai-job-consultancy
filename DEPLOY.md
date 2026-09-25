@@ -27,6 +27,8 @@ Google Cloud → Service account → JSON key → share sheet with `client_email
 
 6. Deploy
 
+Build uses **one** Python function (`api/index.py`) instead of many — faster, fewer Vercel failures. See `docs/VERCEL-LOGS.md` if a deploy fails.
+
 ## 3. Smoke test
 
 - `GET https://YOUR.vercel.app/api/health`  

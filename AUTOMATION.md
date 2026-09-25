@@ -4,7 +4,7 @@
 
 | Step | What runs |
 |------|-----------|
-| Job matching + HR email | Vercel cron every 6 hours → `/api/cron/process` |
+| Job matching + HR email | Vercel cron **once daily** (Hobby) → `/api/cron/process`; or Admin → **Run job process now** |
 | Online ₹99 payment | Razorpay checkout → `/api/payment/confirm` (instant) + webhook backup |
 | Payment verified email | Upload link with `seeker_id` |
 | New UPI registration | Seeker gets “received” email; you get `ADMIN_NOTIFY_EMAIL` if set |

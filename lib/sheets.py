@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Any, Optional
 
 from google.oauth2 import service_account
@@ -37,9 +38,41 @@ _TAB_ENV = {
 }
 
 
+def _resolve_tab_name(env_key: str, default: str) -> str:
+    """Use env tab name only if it looks like a real sheet tab (not pasted doc text)."""
+    name = env(env_key, "").strip()
+    if not name:
+        return default
+    lower = name.lower()
+    if name == default:
+        return name
+    # Reject sentences / README text accidentally pasted into Vercel env
+    junk_words = (
+        "delete",
+        "variable",
+        "only",
+        "must match",
+        "exactly",
+        "http",
+        "your_",
+        "example",
+        "or ",
+        "tab names",
+    )
+    if any(w in lower for w in junk_words):
+        return default
+    if not re.match(r"^[A-Za-z0-9 _-]{1,100}$", name):
+        return default
+    if any(c in name for c in "—!?.,"):
+        return default
+    return name
+
+
 def sheet_name(tab: str) -> str:
     key, default = _TAB_ENV.get(tab, (tab, tab))
-    return env(key, default)
+    if tab in _TAB_ENV:
+        return _resolve_tab_name(key, default)
+    return env(key, default).strip() or default
 
 
 def append_row(tab: str, values: list[Any]) -> None:
@@ -124,12 +157,13 @@ def ensure_workbook_tabs() -> dict[str, str]:
         _get_sheets_service().spreadsheets().batchUpdate(
             spreadsheetId=sid, body={"requests": requests}
         ).execute()
+        existing = existing | {sheet_name(k) for k in sheet_schema.TAB_SPECS}
 
     report: dict[str, str] = {}
     for tab_key, headers in sheet_schema.TAB_SPECS.items():
         title = sheet_name(tab_key)
         report[tab_key] = title
-        rows = read_all(tab_key) if title in existing or requests else []
+        rows = read_all(tab_key) if title in existing else []
         if not rows:
             _get_sheets_service().spreadsheets().values().update(
                 spreadsheetId=sid,
