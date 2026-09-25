@@ -342,20 +342,46 @@
         regBtn.textContent = 'Submit registration'
       }
     }
-    document.getElementById('up').onsubmit = async (e) => {
+    const upForm = document.getElementById('up')
+    const upBtn = upForm.querySelector('button[type=submit]')
+    upForm.onsubmit = async (e) => {
       e.preventDefault()
+      if (upBtn.disabled) return
+      upBtn.disabled = true
+      upBtn.textContent = 'Saving…'
       const body = {
-        seeker_id: up.sid.value,
-        email: up.email2.value,
-        target_role: up.role.value,
-        experience_years: up.exp.value,
-        location: up.loc.value,
-        domain: up.domain.value,
-        resume_url: up.resume.value,
+        seeker_id: upForm.seeker_id.value.trim(),
+        email: upForm.email.value.trim(),
+        target_role: upForm.target_role.value.trim(),
+        experience_years: upForm.experience_years.value,
+        location: upForm.location.value.trim(),
+        domain: upForm.domain.value,
+        resume_url: upForm.resume_url.value.trim(),
       }
-      const res = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
-      const data = await res.json()
-      msg2.textContent = res.ok ? `Saved. ${data.status}` : (data.error || 'Failed')
+      let res, data
+      try {
+        res = await fetch('/api/upload', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        data = await res.json()
+      } catch (_) {
+        msg2.textContent = 'Network error — try again in a moment'
+        msg2.style.color = '#f87171'
+        upBtn.disabled = false
+        upBtn.textContent = 'Upload details'
+        return
+      }
+      if (res.ok) {
+        msg2.textContent = `Saved. Status: ${data.status}. You have ${data.posts_remaining ?? 5} company auto-applies.`
+        msg2.style.color = ''
+        upBtn.textContent = 'Saved'
+      } else {
+        const hint = res.status === 402
+          ? ' Payment is not verified yet — wait for our email after admin verifies your UTR.'
+          : ''
+        msg2.textContent = (data.error || data.message || `Failed (${res.status})`) + hint
+        msg2.style.color = '#f87171'
+        upBtn.disabled = false
+        upBtn.textContent = 'Upload details'
+      }
     }
   </script>
 </body>

@@ -5,7 +5,7 @@ from __future__ import annotations
 import importlib
 from http.server import BaseHTTPRequestHandler
 from typing import Optional
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 from lib.http_util import send_json
 
@@ -38,16 +38,25 @@ def normalize_path(path: str) -> str:
 
 def request_path(handler: BaseHTTPRequestHandler) -> str:
     """Original URL path (rewrites may set self.path to /api/index)."""
+    parsed = urlparse(handler.path)
+    qs = parse_qs(parsed.query)
+    for key in ("__path", "path"):
+        parts = qs.get(key) or []
+        if parts and parts[0].strip():
+            segment = parts[0].strip().lstrip("/")
+            return normalize_path("/api/" + segment)
+
     for name in (
         "x-vercel-original-path",
         "x-original-path",
         "x-forwarded-uri",
         "x-matched-path",
+        "x-invoke-path",
     ):
         val = handler.headers.get(name) or handler.headers.get(name.replace("-", "_").title())
         if val:
-            return normalize_path(val)
-    return normalize_path(handler.path)
+            return normalize_path(urlparse(val).path if "://" in val or val.startswith("/") else val)
+    return normalize_path(parsed.path)
 
 
 def handler_module(path: str) -> Optional[str]:
