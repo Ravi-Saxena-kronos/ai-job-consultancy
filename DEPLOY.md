@@ -9,8 +9,8 @@ Google Cloud → Service account → JSON key → share sheet with `client_email
 ## 2. Vercel project
 
 1. [vercel.com/new](https://vercel.com/new) → import Git repo  
-2. **Root Directory:** `ai-job-consultancy`  
-3. Framework: Other (Python functions in `api/`)  
+2. **Root Directory:** `.` (this repo) or `ai-job-consultancy` if monorepo  
+3. **Framework Preset:** **Other** (repo sets `"framework": null` in `vercel.json` — do **not** pick FastAPI/Python preset or build fails with “No python entrypoint”)  
 4. Environment variables from `.env.example` (Production):
 
 | Variable | Required |
@@ -45,7 +45,7 @@ curl -X POST "https://YOUR.vercel.app/api/admin/verify_payment" \
 
 ## 5. Cron
 
-Vercel runs `/api/cron/process` every 6 hours. Test manually:
+Vercel **Hobby** allows **one cron per day** — default `30 2 * * *` (08:00 IST). Pro plan can use more frequent schedules. Test manually:
 
 ```bash
 curl "https://YOUR.vercel.app/api/cron/process" \

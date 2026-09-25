@@ -1,14 +1,17 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
   "installCommand": "pip install -r requirements.txt",
+  "functions": {
+    "api/**/*.py": {
+      "excludeFiles": "{tests/**,scripts/**,web/**,public/**,docs/**,**/*.md,build_*.py}"
+    }
+  },
   "crons": [
     {
       "path": "/api/cron/process",
       "schedule": "30 2 * * *"
     }
-  ],
-  "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
   ],
   "headers": [
     {
