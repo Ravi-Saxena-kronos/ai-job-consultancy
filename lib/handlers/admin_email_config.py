@@ -26,8 +26,13 @@ class handler(BaseHTTPRequestHandler):
             send_json(self, 401, {"error": "unauthorized"})
             return
         raw_from = (env("EMAIL_FROM") or "").strip()
+        brevo_sender = (env("BREVO_SENDER_EMAIL") or "").strip()
         resolved = resolved_from_email()
         provider = email_provider() or "none"
+        looks_like_name = raw_from.lower() in {
+            "ai-job-consultancy",
+            "ai job consultancy",
+        } or (raw_from and "@" not in raw_from)
         send_json(
             self,
             200,
@@ -36,13 +41,18 @@ class handler(BaseHTTPRequestHandler):
                 "provider": provider,
                 "email_provider_env": env("EMAIL_PROVIDER") or "auto",
                 "email_from_raw_length": len(raw_from),
+                "email_from_raw_ends_with": raw_from[-6:] if len(raw_from) >= 6 else raw_from,
+                "email_from_has_at_sign": "@" in raw_from,
+                "email_from_looks_like_display_name": looks_like_name,
+                "brevo_sender_email_set": bool(brevo_sender),
                 "email_from_resolved": _mask_email(resolved),
+                "email_from_valid": bool(resolved and "@" in resolved),
                 "brevo_key_set": bool(env("BREVO_API_KEY").strip()),
                 "resend_key_set": bool(env("RESEND_API_KEY").strip()),
                 "email_configured": email_configured(),
                 "hint": (
-                    "EMAIL_FROM must match a Verified sender in Brevo (plain Gmail, no display name). "
-                    "EMAIL_PROVIDER=brevo; delete RESEND_API_KEY if unused. Redeploy after env changes."
+                    "EMAIL_FROM must be ravisaxenaa786@gmail.com (24 chars), NOT 'AI-job-consultancy' (18). "
+                    "Or set BREVO_SENDER_EMAIL=ravisaxenaa786@gmail.com and redeploy."
                 ),
             },
         )

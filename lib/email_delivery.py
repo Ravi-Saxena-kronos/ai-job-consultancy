@@ -42,11 +42,17 @@ def email_provider() -> str:
 
 
 def resolved_from_email() -> str:
-    return normalize_from_email(env("EMAIL_FROM"))
+    """Verified sender address for Brevo/Resend (not display name)."""
+    for key in ("BREVO_SENDER_EMAIL", "EMAIL_FROM"):
+        addr = normalize_from_email(env(key))
+        if addr and "@" in addr:
+            return addr
+    return ""
 
 
 def email_configured() -> bool:
-    return bool(resolved_from_email() and email_provider())
+    addr = resolved_from_email()
+    return bool(addr and "@" in addr and email_provider())
 
 
 def _from_addr() -> str:

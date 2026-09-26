@@ -6,9 +6,13 @@ from pathlib import Path
 
 
 def _load_dotenv() -> None:
+    # On Vercel, only use dashboard env vars (never a bundled .env file).
+    if os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV"):
+        return
     path = Path(__file__).resolve().parents[1] / ".env"
     if not path.is_file():
         return
+    parsed: dict[str, str] = {}
     for line in path.read_text(encoding="utf-8").splitlines():
         line = line.strip()
         if not line or line.startswith("#") or "=" not in line:
@@ -17,8 +21,10 @@ def _load_dotenv() -> None:
         key = key.strip()
         if not key:
             continue
-        # Later lines in .env win (e.g. empty BREVO_API_KEY= then real key on next line).
-        os.environ[key] = val.strip().strip('"').strip("'")
+        parsed[key] = val.strip().strip('"').strip("'")
+    for key, val in parsed.items():
+        if key not in os.environ:
+            os.environ[key] = val
 
 
 _load_dotenv()
