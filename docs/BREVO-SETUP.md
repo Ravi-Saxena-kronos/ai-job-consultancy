@@ -21,7 +21,9 @@ Remove or leave empty `RESEND_API_KEY` if you want Brevo only (auto mode picks R
 
 | Variable | Example |
 |----------|---------|
-| `EMAIL_FROM` | `yourname@gmail.com` (must match verified sender) |
+| `EMAIL_FROM` | `yourname@gmail.com` **or** display name only if you set `ADMIN_NOTIFY_EMAIL` below |
+| `ADMIN_NOTIFY_EMAIL` | **Same verified Gmail** — used as sender if `EMAIL_FROM` is not an email |
+| `BREVO_SENDER_EMAIL` | Optional; same Gmail (highest priority) |
 | `EMAIL_FROM_NAME` | `AI Job Consultancy` (optional) |
 | `BREVO_API_KEY` | `xkeysib-...` |
 | `EMAIL_PROVIDER` | `brevo` (optional; auto works if only Brevo is set) |

@@ -24,6 +24,8 @@ def normalize_from_email(raw: str) -> str:
         text = text.split("<", 1)[1].split(">", 1)[0].strip()
     match = _EMAIL_RE.search(text)
     email = (match.group(0) if match else text).strip().lower()
+    if "@" not in email:
+        return ""
     return email
 
 
@@ -41,11 +43,27 @@ def email_provider() -> str:
     return ""
 
 
+_FROM_ENV_KEYS = (
+    "BREVO_SENDER_EMAIL",
+    "SENDER_EMAIL",
+    "EMAIL_FROM",
+    "ADMIN_NOTIFY_EMAIL",
+    "EMAIL_SUPPORT",
+)
+
+
+def resolved_from_email_source() -> str:
+    for key in _FROM_ENV_KEYS:
+        if normalize_from_email(env(key)):
+            return key
+    return ""
+
+
 def resolved_from_email() -> str:
     """Verified sender address for Brevo/Resend (not display name)."""
-    for key in ("BREVO_SENDER_EMAIL", "EMAIL_FROM"):
+    for key in _FROM_ENV_KEYS:
         addr = normalize_from_email(env(key))
-        if addr and "@" in addr:
+        if addr:
             return addr
     return ""
 
@@ -63,7 +81,13 @@ def _from_addr() -> str:
 
 
 def _from_name() -> str:
-    return env("EMAIL_FROM_NAME", "AI Job Consultancy").strip() or "AI Job Consultancy"
+    named = env("EMAIL_FROM_NAME").strip()
+    if named:
+        return named
+    raw_from = env("EMAIL_FROM").strip()
+    if raw_from and "@" not in raw_from:
+        return raw_from
+    return "AI Job Consultancy"
 
 
 def _send_resend(to: str, subject: str, text: str) -> str:

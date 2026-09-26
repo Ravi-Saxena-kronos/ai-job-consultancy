@@ -6,7 +6,12 @@ import lib.bootstrap_path  # noqa: F401
 from http.server import BaseHTTPRequestHandler
 
 from lib.config import env
-from lib.email_delivery import email_configured, email_provider, resolved_from_email
+from lib.email_delivery import (
+    email_configured,
+    email_provider,
+    resolved_from_email,
+    resolved_from_email_source,
+)
 from lib.http_util import bearer_secret, send_json
 
 
@@ -46,13 +51,14 @@ class handler(BaseHTTPRequestHandler):
                 "email_from_looks_like_display_name": looks_like_name,
                 "brevo_sender_email_set": bool(brevo_sender),
                 "email_from_resolved": _mask_email(resolved),
+                "email_from_resolved_via": resolved_from_email_source() or "none",
                 "email_from_valid": bool(resolved and "@" in resolved),
                 "brevo_key_set": bool(env("BREVO_API_KEY").strip()),
                 "resend_key_set": bool(env("RESEND_API_KEY").strip()),
                 "email_configured": email_configured(),
                 "hint": (
-                    "EMAIL_FROM must be ravisaxenaa786@gmail.com (24 chars), NOT 'AI-job-consultancy' (18). "
-                    "Or set BREVO_SENDER_EMAIL=ravisaxenaa786@gmail.com and redeploy."
+                    "Set ADMIN_NOTIFY_EMAIL or BREVO_SENDER_EMAIL to your verified Gmail on Vercel, "
+                    "then redeploy. EMAIL_FROM can stay as display name; code uses the Gmail env for sending."
                 ),
             },
         )
