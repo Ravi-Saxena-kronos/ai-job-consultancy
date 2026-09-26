@@ -18,15 +18,23 @@ playwright install chromium
 
 If `python3 -m venv` fails, install once: `sudo apt install python3-venv python3-full`
 
-`.env` (same as production):
+`.env` (same Google values as Vercel):
 
 | Variable | Example |
 |----------|---------|
 | `GOOGLE_SHEET_ID` | `1qOE-FyC9YAtFhmawynXyTbSk5uN7aoVKkyRdjcUr7oI` |
-| `GOOGLE_SERVICE_ACCOUNT_JSON` | service account key (one line) |
-| `LINKEDIN_JOBS_GID` | `2126827446` (optional; resolves tab title for JOB_APPLICATIONS) |
+| `LINKEDIN_JOBS_GID` | `2126827446` |
+| `GOOGLE_SERVICE_ACCOUNT_FILE` | `google-service-account.json` (local — download key from Google Cloud) |
+| **or** `GOOGLE_SERVICE_ACCOUNT_JSON` | paste one-line JSON from Vercel |
 
-Share the spreadsheet with the service account email as **Editor**.
+**Local setup (easiest):**
+
+1. Google Cloud → your service account → **Keys** → **Add key** → JSON → save as  
+   `ai-job-consultancy/google-service-account.json` (never commit).
+2. In `.env`: `GOOGLE_SERVICE_ACCOUNT_FILE=google-service-account.json`
+3. Google Sheet → **Share** → service account `client_email` → **Editor**
+
+**Or** copy `GOOGLE_SERVICE_ACCOUNT_JSON` from Vercel → paste into `.env` as one line.
 
 Set the same `GOOGLE_SHEET_ID` and `LINKEDIN_JOBS_GID` on **Vercel** so cron/admin apply sees the same rows.
 
@@ -37,8 +45,15 @@ source .venv/bin/activate   # if not already active
 python scripts/linkedin_jobs_export.py \
   --seeker-id APS-XXXX \
   --max-jobs 30 \
-  --fetch-descriptions
+  --fetch-descriptions \
+  --mode both
 ```
+
+`--mode`:
+
+- `jobs` — LinkedIn **Jobs** search (title, company, URL)
+- `content` — **Content** search (`/search/results/content/?keywords=Role`); for each post: scroll into view, click **see more**, read `mailto:` links, and if needed open the post URL for full text. Exports work and personal emails found in posts; batch apply still only auto-sends verified HR/careers addresses.
+- `both` — run jobs then content (default)
 
 Or explicit search:
 
@@ -66,7 +81,8 @@ Same as [SHEET-COLUMNS.md](SHEET-COLUMNS.md) **JOB_APPLICATIONS**.
 
 | status | Meaning |
 |--------|---------|
-| `linkedin_lead` | HR/careers email found; cron can apply |
+| `pending_send` | `hr_email` from export; batch will email HR then candidate |
+| `linkedin_lead` | legacy — same as pending_send for batch |
 | `skipped_no_email` | No verified email |
 
 ## After export

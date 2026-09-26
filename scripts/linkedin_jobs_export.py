@@ -11,7 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from lib import linkedin_export, linkedin_scrape, seekers, sheets  # noqa: E402
+from lib import linkedin_content_scrape, linkedin_export, linkedin_scrape, seekers, sheets  # noqa: E402
 from lib.linkedin_export import APPLICATION_HEADERS  # noqa: E402
 
 
@@ -53,6 +53,13 @@ def main() -> int:
         default=str(ROOT / "data" / "linkedin-browser-profile"),
         help="Persistent Chromium profile (login saved here)",
     )
+    parser.add_argument("--debug", action="store_true", help="Screenshot if zero jobs scraped")
+    parser.add_argument(
+        "--mode",
+        choices=("jobs", "content", "both"),
+        default="both",
+        help="jobs=job search; content=posts search for emails; both=run both",
+    )
     args = parser.parse_args()
 
     role = (args.role or "").strip()
@@ -74,30 +81,53 @@ def main() -> int:
 
     tab = sheets.applications_tab_name()
     print(f"Sheet tab: {tab}")
-    known = linkedin_export.existing_job_urls(tab)
+    print(f"Search: role={role!r} location={location!r}")
+    known = linkedin_export.existing_dedupe_keys(tab)
     companies = sheets.rows_as_dicts("COMPANIES")
 
-    jobs = linkedin_scrape.scrape_linkedin_jobs(
-        role,
-        location,
-        max_jobs=args.max_jobs,
-        user_data_dir=args.profile_dir,
-        headless=False,
-        fetch_descriptions=args.fetch_descriptions,
-    )
+    jobs: list = []
+    if args.mode in ("jobs", "both"):
+        jobs.extend(
+            linkedin_scrape.scrape_linkedin_jobs(
+                role,
+                location,
+                max_jobs=args.max_jobs,
+                user_data_dir=args.profile_dir,
+                headless=False,
+                fetch_descriptions=args.fetch_descriptions,
+                debug=args.debug,
+            )
+        )
+    if args.mode in ("content", "both"):
+        print("Content search: posts mentioning role — scanning for work emails…")
+        jobs.extend(
+            linkedin_content_scrape.scrape_content_emails(
+                role,
+                max_posts=max(args.max_jobs * 6, 30),
+                max_leads=args.max_jobs,
+                user_data_dir=args.profile_dir,
+                debug=args.debug,
+                scroll_rounds=45,
+            )
+        )
     if not jobs:
         print(
-            "No jobs scraped. Log in in the browser window, or LinkedIn changed the page — see docs/LINKEDIN-EXPORT.md",
+            "No jobs or emails found. Log in, complete search in browser, or see docs/LINKEDIN-EXPORT.md",
             file=sys.stderr,
         )
         return 1
 
-    new_jobs = linkedin_export.dedupe_listings(jobs, known)
+    new_jobs = linkedin_export.dedupe_listings(jobs, known)[: args.max_jobs]
     sheet_rows = [
         linkedin_export.application_row(j, seeker_id=seeker_id, companies=companies) for j in new_jobs
     ]
 
-    print(f"Scraped {len(jobs)} cards, {len(new_jobs)} new after dedupe (skipped {len(jobs) - len(new_jobs)} duplicates)")
+    all_new = linkedin_export.dedupe_listings(jobs, known)
+    skipped = len(jobs) - len(all_new)
+    print(
+        f"Scraped {len(jobs)} lead(s), {len(new_jobs)} new to append "
+        f"(cap --max-jobs={args.max_jobs}, skipped {skipped} duplicate email/URL)"
+    )
 
     if args.dry_run:
         for row in sheet_rows:

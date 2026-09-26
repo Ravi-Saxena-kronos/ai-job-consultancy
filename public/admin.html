@@ -57,6 +57,13 @@
       Then click <strong>Run job process now</strong> to email HR for <code>linkedin_lead</code> rows. Details: <code>docs/LINKEDIN-EXPORT.md</code>
     </div>
     <p id="status" class="muted"></p>
+    <div id="batch-result" hidden style="margin-top:12px">
+      <p class="muted"><strong>Batch — mail status</strong></p>
+      <table>
+        <thead><tr><th>Seeker</th><th>HR email</th><th>Company</th><th>Status</th></tr></thead>
+        <tbody id="batch-rows"></tbody>
+      </table>
+    </div>
     <div id="wa-box" hidden>
       <p class="muted"><strong>WhatsApp message</strong> — copy and send to seeker:</p>
       <textarea id="wa-text" readonly></textarea>
@@ -240,12 +247,48 @@
         : ((data.error || 'Failed') + (data.hint ? ' — ' + data.hint : ''))
       status.className = res.ok ? 'ok' : 'err'
     }
+    function renderBatchResults(results) {
+      const box = document.getElementById('batch-result')
+      const tbody = document.getElementById('batch-rows')
+      tbody.innerHTML = ''
+      let sent = 0
+      let failed = 0
+      for (const r of results || []) {
+        for (const m of r.mail_sent || []) {
+          const tr = document.createElement('tr')
+          const st = m.status === 'mail_sent' ? 'mail_sent' : (m.status || 'unknown')
+          if (st === 'mail_sent') sent++
+          else failed++
+          tr.innerHTML = `<td>${r.seeker_id || ''}</td><td>${m.hr_email || ''}</td><td>${m.company || ''}</td><td class="${st === 'mail_sent' ? 'ok' : 'err'}">${st}</td>`
+          tbody.appendChild(tr)
+        }
+      }
+      box.hidden = !(results && results.some(x => (x.mail_sent || []).length))
+      return { sent, failed }
+    }
     document.getElementById('run').onclick = async () => {
       status.textContent = 'Running batch…'
+      document.getElementById('batch-result').hidden = true
       const res = await apiFetch('/api/cron/process', { headers: authHeaders() })
       const data = await readApiJson(res)
-      status.textContent = res.ok ? 'Batch done' : (data.error || 'Failed')
-      status.className = res.ok ? 'ok' : 'err'
+      if (!res.ok) {
+        status.textContent = data.error || 'Failed'
+        status.className = 'err'
+        return
+      }
+      const results = data.results || []
+      const { sent, failed } = renderBatchResults(results)
+      const parts = results.map(r => {
+        const n = (r.mail_sent || []).filter(m => m.status === 'mail_sent').length
+        return `${r.seeker_id || '?'}: ${n} mail_sent, applied=${r.applied ?? 0}, posts_left=${r.posts_remaining ?? '?'}`
+      })
+      status.textContent = sent
+        ? `Batch done — ${sent} HR+candidate mail(s) sent.${failed ? ` ${failed} failed.` : ''} ${parts.join(' | ')}`
+        : `Batch done — no mail sent (check JOB_APPLICATIONS: status pending_send/skipped_no_email + hr_email, seeker active + posts_remaining). ${parts.join(' | ')}`
+      status.className = sent ? 'ok' : 'err'
+      if (data.results && data.results[0] && data.results[0].error) {
+        status.textContent += ' — ' + data.results[0].error
+      }
     }
   </script>
 </body>

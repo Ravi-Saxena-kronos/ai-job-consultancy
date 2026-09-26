@@ -37,7 +37,9 @@
 | K | applied_at |
 | L | hr_message_id |
 
-`status`: skipped_no_email | linkedin_lead | applied
+`status`: skipped_no_email | pending_send | linkedin_lead (legacy) | applied
+
+After LinkedIn export, rows with an `hr_email` use `pending_send`. Batch sets `applied` and fills `hr_message_id` when mail is sent.
 
 ## COMPANY_VERIFIED
 

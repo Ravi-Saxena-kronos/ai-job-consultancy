@@ -56,7 +56,24 @@ def normalize_job_url(url: str) -> str:
     return urlunparse((parsed.scheme or "https", parsed.netloc.lower(), path, "", query, ""))
 
 
-def existing_job_urls(tab_title: Optional[str] = None) -> set[str]:
+def listing_dedupe_key(job: JobListing) -> str:
+    """Unique key per lead — content posts must not all share the search URL."""
+    url = normalize_job_url(job.job_url or "")
+    if url and "/content-export/" in url:
+        return url
+    emails = hr_verify.extract_post_emails(job.description or "", allow_free_mail=True)
+    if emails:
+        return f"mailto:{hr_verify.normalize_email(emails[0])}"
+    if url and "/search/results/content" not in url:
+        return url
+    company = normalize_company(job.company)
+    title = (job.title or "").strip().lower()
+    if company or title:
+        return f"post:{company}|{title}"
+    return url or ""
+
+
+def existing_dedupe_keys(tab_title: Optional[str] = None) -> set[str]:
     from . import sheets
 
     title = tab_title or sheets.applications_tab_name()
@@ -64,24 +81,28 @@ def existing_job_urls(tab_title: Optional[str] = None) -> set[str]:
     if not rows:
         return set()
     headers = [str(h).strip().lower().replace(" ", "_") for h in rows[0]]
-    try:
-        idx = headers.index("job_url")
-    except ValueError:
-        return set()
     out: set[str] = set()
     for row in rows[1:]:
-        if idx < len(row):
-            norm = normalize_job_url(str(row[idx]))
-            if norm:
-                out.add(norm)
+        padded = row + [""] * (len(headers) - len(row))
+        data = {headers[i]: padded[i] for i in range(len(headers))}
+        norm = normalize_job_url(str(data.get("job_url") or ""))
+        if norm:
+            out.add(norm)
+        hr = hr_verify.normalize_email(str(data.get("hr_email") or ""))
+        if hr and "@" in hr:
+            out.add(f"mailto:{hr}")
     return out
 
 
-def dedupe_listings(jobs: list[JobListing], known_urls: set[str]) -> list[JobListing]:
-    seen: set[str] = set(known_urls)
+def existing_job_urls(tab_title: Optional[str] = None) -> set[str]:
+    return existing_dedupe_keys(tab_title)
+
+
+def dedupe_listings(jobs: list[JobListing], known_keys: set[str]) -> list[JobListing]:
+    seen: set[str] = set(known_keys)
     out: list[JobListing] = []
     for job in jobs:
-        key = normalize_job_url(job.job_url)
+        key = listing_dedupe_key(job)
         if not key or key in seen:
             continue
         seen.add(key)
@@ -97,10 +118,19 @@ def enrich_hr_email(job: JobListing, companies: Optional[list[dict]] = None) -> 
     hr = sheets.find_verified_company_email(job.company, companies)
     if hr and hr_verify.verified_enough(hr, "company_csv"):
         return hr, "Y", "company_csv"
-    hr = hr_verify.extract_from_description(job.description)
-    if hr and hr_verify.verified_enough(hr, "jd_parse"):
-        return hr, "Y", "jd_parse"
-    return hr or "", "N", "linkedin_export"
+    text = job.description or ""
+    hr, method = hr_verify.pick_best_email(text)
+    if not hr:
+        posts = hr_verify.extract_post_emails(text, allow_free_mail=True)
+        hr = posts[0] if posts else ""
+        if not hr:
+            work = hr_verify.extract_work_emails(text)
+            hr = work[0] if work else ""
+        method = "linkedin_export"
+    elif method == "linkedin_export" and hr and hr_verify.verified_enough(hr, "content_parse"):
+        method = "content_parse"
+    verified = "Y" if hr and hr_verify.verified_enough(hr, method) else "N"
+    return hr or "", verified, method
 
 
 def application_row(
@@ -110,7 +140,7 @@ def application_row(
     companies: Optional[list[dict]] = None,
 ) -> list[str]:
     hr_email, verified, method = enrich_hr_email(job, companies)
-    status = "linkedin_lead" if verified == "Y" and hr_email else "skipped_no_email"
+    status = "pending_send" if hr_email else "skipped_no_email"
     app_id = "LNK-" + uuid.uuid4().hex[:8].upper()
     today = dt.date.today().isoformat()
     return [

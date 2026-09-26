@@ -33,21 +33,40 @@ def process_one_seeker(seeker: dict[str, str]) -> dict[str, Any]:
         posts_left = int(seeker.get("posts_remaining") or "0")
     except ValueError:
         posts_left = 0
+    seeker_id = seeker.get("seeker_id") or ""
     if posts_left <= 0:
-        return {"seeker_id": seeker.get("seeker_id"), "applied": 0, "skipped": 0}
+        return {
+            "seeker_id": seeker_id,
+            "applied": 0,
+            "skipped": 0,
+            "mail_sent": [],
+        }
 
     role = seeker.get("target_role") or seeker.get("domain") or "developer"
     location = seeker.get("location") or "Delhi"
-    seeker_id = seeker.get("seeker_id") or ""
     seeker_email = seeker.get("email") or ""
     seeker_name = seeker.get("name") or ""
     resume_url = seeker.get("resume_url") or ""
     companies = sheets.rows_as_dicts("COMPANIES")
+    mail_sent: list[dict[str, str]] = []
+
+    # JOB_APPLICATIONS (LinkedIn export) first — uses hr_email from sheet.
+    li = linkedin_leads.apply_linkedin_leads_for_seeker(seeker, posts_left=posts_left)
+    applied = li.get("linkedin_applied", 0)
+    skipped = li.get("linkedin_skipped", 0)
+    posts_left = li.get("posts_left", posts_left)
+    mail_sent.extend(li.get("mail_sent") or [])
+    if li.get("error"):
+        return {
+            "seeker_id": seeker_id,
+            "applied": applied,
+            "skipped": skipped,
+            "posts_remaining": posts_left,
+            "mail_sent": mail_sent,
+            "error": li["error"],
+        }
 
     jobs = adzuna.search_jobs(what=role, where=location, limit=posts_left + 10)
-    applied = 0
-    skipped = 0
-
     for job in jobs:
         if applied >= posts_left:
             break
@@ -89,7 +108,7 @@ def process_one_seeker(seeker: dict[str, str]) -> dict[str, Any]:
             f"Please consider this application for {title}. "
             f"The candidate's experience aligns with the role requirements."
         )
-        email_send.hr_application_email(
+        hr_msg_id = email_send.hr_application_email(
             hr_email,
             title,
             seeker_name,
@@ -111,18 +130,24 @@ def process_one_seeker(seeker: dict[str, str]) -> dict[str, Any]:
                 source,
                 "applied",
                 _today(),
-                "sent",
+                hr_msg_id or "sent",
             ],
         )
-        email_send.candidate_applied_email(seeker_email, company, title, app_id)
+        cand_msg_id = email_send.candidate_applied_email(seeker_email, company, title, app_id)
         applied += 1
         posts_left -= 1
-
-    if posts_left > 0:
-        li = linkedin_leads.apply_linkedin_leads_for_seeker(seeker, posts_left=posts_left)
-        applied += li.get("linkedin_applied", 0)
-        skipped += li.get("linkedin_skipped", 0)
-        posts_left = li.get("posts_left", posts_left)
+        mail_sent.append(
+            {
+                "application_id": app_id,
+                "hr_email": hr_email,
+                "company": company,
+                "title": title,
+                "status": "mail_sent",
+                "hr_message_id": hr_msg_id or "",
+                "candidate_message_id": cand_msg_id or "",
+                "candidate_email": seeker_email,
+            }
+        )
 
     # Log updated posts count as new seeker row (append-only audit trail)
     if applied or skipped:
@@ -146,7 +171,13 @@ def process_one_seeker(seeker: dict[str, str]) -> dict[str, Any]:
             ],
         )
 
-    return {"seeker_id": seeker_id, "applied": applied, "skipped": skipped, "posts_remaining": posts_left}
+    return {
+        "seeker_id": seeker_id,
+        "applied": applied,
+        "skipped": skipped,
+        "posts_remaining": posts_left,
+        "mail_sent": mail_sent,
+    }
 
 
 def run_batch() -> list[dict[str, Any]]:

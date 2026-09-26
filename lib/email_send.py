@@ -83,7 +83,7 @@ def hr_application_email(
     seeker_name: str,
     resume_url: str,
     cover_note: str,
-) -> None:
+) -> str:
     body = (
         f"Dear Hiring Team,\n\n"
         f"A candidate has applied for: {title}\n"
@@ -93,7 +93,7 @@ def hr_application_email(
     if resume_url:
         body += f"Resume: {resume_url}\n\n"
     body += "Sent via AI Job Consultancy with the candidate's consent.\n"
-    send_email(hr_email, f"Application: {title}", body)
+    return send_email(hr_email, f"Application: {title}", body)
 
 
 def candidate_applied_email(seeker_email: str, company: str, title: str, application_id: str) -> str:
