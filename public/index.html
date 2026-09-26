@@ -3,108 +3,415 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AI Job Consultancy</title>
+  <meta name="theme-color" content="#1a0a2e">
+  <title>AI Job Consultancy — Smart outreach for your dream role</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
   <style>
-    :root { --bg:#0f1419; --card:#1a2332; --text:#e7ecf3; --muted:#8b98a8; --accent:#3b82f6; --warn:#f59e0b; }
+    :root {
+      --bg-deep: #0c0618;
+      --bg-mid: #1a0a2e;
+      --card: rgba(255, 255, 255, 0.06);
+      --card-border: rgba(255, 255, 255, 0.12);
+      --text: #f8fafc;
+      --muted: #a8b4c8;
+      --accent: #ff6b9d;
+      --accent-2: #7c3aed;
+      --accent-3: #22d3ee;
+      --accent-4: #fbbf24;
+      --success: #4ade80;
+      --warn: #fb923c;
+      --radius: 16px;
+      --shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+    }
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 20px 16px 48px; line-height: 1.5; }
-    main { max-width: 520px; margin: 0 auto; }
-    h1 { font-size: 1.6rem; margin-bottom: 6px; }
-    .muted { color: var(--muted); font-size: 0.95rem; margin-bottom: 20px; }
-    .card { background: var(--card); border: 1px solid #2a3544; border-radius: 12px; padding: 18px; margin-bottom: 16px; }
-    h2 { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 12px; }
-    .disclaimer { border-left: 3px solid var(--warn); padding-left: 12px; font-size: 0.9rem; color: var(--muted); }
-    .upi-box { background: #0f1419; border: 1px dashed #3b82f6; border-radius: 10px; padding: 14px; margin: 12px 0; text-align: center; }
-    .upi-id { font-family: ui-monospace, monospace; font-size: 1.05rem; color: #93c5fd; word-break: break-all; }
-    .upi-actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-    .upi-actions button, .upi-actions a.btn { flex: 1; min-width: 120px; text-align: center; margin-top: 0; padding: 10px; border-radius: 8px; text-decoration: none; font-size: 0.9rem; }
-    a.btn { background: #334155; color: #fff; display: inline-block; }
-    button.secondary { background: #334155; }
-    label { display: block; font-size: 0.85rem; color: var(--muted); margin: 10px 0 4px; }
-    input, select, textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #2a3544; background: #0f1419; color: var(--text); }
-    button { width: 100%; margin-top: 14px; padding: 12px; border: none; border-radius: 8px; background: var(--accent); color: #fff; font-weight: 600; cursor: pointer; }
-    .plans li { margin-left: 1.2rem; color: var(--muted); margin-bottom: 4px; }
-    .price-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 8px; }
-    .price-table th, .price-table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #2a3544; }
-    .price-table th { color: var(--muted); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; }
-    .price-table td:last-child { text-align: right; white-space: nowrap; color: #22c55e; font-weight: 600; }
-    .price-table tr.highlight td { background: rgba(59, 130, 246, 0.08); }
-    .pack-note { font-size: 0.85rem; color: var(--muted); margin-top: 12px; line-height: 1.45; }
-    #msg { margin-top: 10px; font-size: 0.9rem; color: var(--muted); }
-    .fee { font-size: 1.4rem; font-weight: 600; color: #22c55e; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg-deep);
+      color: var(--text);
+      line-height: 1.55;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .bg-mesh {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% -10%, rgba(124, 58, 237, 0.45), transparent 50%),
+        radial-gradient(ellipse 60% 40% at 90% 10%, rgba(255, 107, 157, 0.35), transparent 45%),
+        radial-gradient(ellipse 50% 50% at 50% 100%, rgba(34, 211, 238, 0.2), transparent 50%),
+        linear-gradient(165deg, #0c0618 0%, #1a0a2e 40%, #12081f 100%);
+      pointer-events: none;
+    }
+    .bg-orbs {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .bg-orbs span {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(60px);
+      opacity: 0.5;
+      animation: float 18s ease-in-out infinite;
+    }
+    .bg-orbs span:nth-child(1) { width: 280px; height: 280px; background: #7c3aed; top: 10%; left: -5%; }
+    .bg-orbs span:nth-child(2) { width: 200px; height: 200px; background: #ff6b9d; top: 40%; right: -3%; animation-delay: -6s; }
+    .bg-orbs span:nth-child(3) { width: 160px; height: 160px; background: #22d3ee; bottom: 20%; left: 30%; animation-delay: -12s; }
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(20px, -30px) scale(1.08); }
+    }
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 28px 18px 64px;
+    }
+    .hero {
+      text-align: center;
+      margin-bottom: 28px;
+      padding: 28px 12px 8px;
+    }
+    .logo-row {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .logo-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      box-shadow: 0 8px 32px rgba(255, 107, 157, 0.4);
+    }
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(1.75rem, 5vw, 2.15rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(120deg, #fff 0%, #e9d5ff 40%, #fda4af 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      line-height: 1.15;
+    }
+    .hero-tagline {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(1.05rem, 3.5vw, 1.25rem);
+      font-weight: 600;
+      color: var(--text);
+      margin: 14px auto 10px;
+      max-width: 420px;
+      line-height: 1.4;
+    }
+    .hero-tagline em {
+      font-style: normal;
+      background: linear-gradient(90deg, var(--accent-3), var(--accent-4));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .hero-sub {
+      color: var(--muted);
+      font-size: 0.95rem;
+      max-width: 440px;
+      margin: 0 auto 18px;
+    }
+    .pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+    .pill {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--card-border);
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .pill.pink { color: #fda4af; border-color: rgba(255, 107, 157, 0.4); }
+    .pill.purple { color: #c4b5fd; border-color: rgba(124, 58, 237, 0.4); }
+    .pill.cyan { color: #67e8f9; border-color: rgba(34, 211, 238, 0.35); }
+    .card {
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+    }
+    .card.accent-top {
+      border-top: 3px solid transparent;
+      border-image: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent-3)) 1;
+    }
+    h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent-3);
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+    .disclaimer {
+      border: 1px solid rgba(251, 146, 60, 0.35);
+      background: rgba(251, 146, 60, 0.08);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      font-size: 0.88rem;
+      color: #fcd34d;
+      text-align: center;
+    }
+    .disclaimer strong { color: #fde68a; }
+    .upi-box {
+      background: linear-gradient(145deg, rgba(124, 58, 237, 0.15), rgba(255, 107, 157, 0.1));
+      border: 1px dashed rgba(167, 139, 250, 0.5);
+      border-radius: 14px;
+      padding: 18px;
+      margin: 14px 0;
+      text-align: center;
+    }
+    .upi-id {
+      font-family: ui-monospace, monospace;
+      font-size: 1.05rem;
+      color: #e9d5ff;
+      word-break: break-all;
+    }
+    .upi-actions { display: flex; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+    .upi-actions button, .upi-actions a.btn {
+      flex: 1; min-width: 120px; text-align: center; margin-top: 0;
+      padding: 11px; border-radius: 10px; text-decoration: none; font-size: 0.9rem;
+      font-weight: 600; border: none; cursor: pointer;
+    }
+    a.btn { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; display: inline-block; }
+    button.secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text);
+      border: 1px solid var(--card-border);
+    }
+    label { display: block; font-size: 0.82rem; color: var(--muted); margin: 12px 0 5px; font-weight: 500; }
+    input, select, textarea {
+      width: 100%; padding: 12px 14px; border-radius: 10px;
+      border: 1px solid var(--card-border);
+      background: rgba(0, 0, 0, 0.25);
+      color: var(--text);
+      font-family: inherit;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: rgba(167, 139, 250, 0.6);
+      box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.2);
+    }
+    button[type="submit"], .card > form > button {
+      width: 100%; margin-top: 16px; padding: 14px;
+      border: none; border-radius: 12px;
+      background: linear-gradient(135deg, #ec4899, #8b5cf6);
+      color: #fff; font-weight: 700; font-size: 1rem;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      box-shadow: 0 8px 28px rgba(139, 92, 246, 0.45);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    button[type="submit"]:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 12px 36px rgba(236, 72, 153, 0.5);
+    }
+    button:disabled { opacity: 0.65; cursor: not-allowed; }
+    .muted { color: var(--muted); font-size: 0.92rem; }
+    .fee {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      background: linear-gradient(90deg, var(--success), var(--accent-3));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .price-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; margin-top: 10px; }
+    .price-table th, .price-table td {
+      text-align: left; padding: 10px 8px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .price-table th {
+      color: var(--muted); font-weight: 600; font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .price-table td:last-child {
+      text-align: right; white-space: nowrap;
+      color: var(--success); font-weight: 700;
+    }
+    .price-table tr.highlight td {
+      background: linear-gradient(90deg, rgba(124, 58, 237, 0.12), transparent);
+    }
+    .pack-note { font-size: 0.85rem; color: var(--muted); margin-top: 14px; line-height: 1.5; }
+    #msg, #msg0, #msg2 { margin-top: 12px; font-size: 0.9rem; color: var(--muted); }
     .steps { list-style: none; counter-reset: step; padding: 0; }
-    .steps li { counter-increment: step; position: relative; padding: 0 0 14px 2.4rem; font-size: 0.92rem; color: var(--text); }
+    .steps li {
+      counter-increment: step;
+      position: relative;
+      padding: 0 0 16px 2.75rem;
+      font-size: 0.92rem;
+    }
     .steps li:last-child { padding-bottom: 0; }
     .steps li::before {
       content: counter(step);
       position: absolute; left: 0; top: 0;
-      width: 1.6rem; height: 1.6rem; line-height: 1.6rem; text-align: center;
-      font-size: 0.75rem; font-weight: 700;
-      background: var(--accent); color: #fff; border-radius: 50%;
+      width: 1.85rem; height: 1.85rem; line-height: 1.85rem; text-align: center;
+      font-size: 0.8rem; font-weight: 800;
+      font-family: 'Outfit', sans-serif;
+      background: linear-gradient(135deg, var(--accent-2), var(--accent));
+      color: #fff; border-radius: 10px;
+      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.4);
     }
-    .steps li strong { display: block; margin-bottom: 2px; }
+    .steps li strong { display: block; margin-bottom: 4px; color: var(--text); }
     .steps li span { color: var(--muted); font-size: 0.88rem; }
-    .steps-note { margin-top: 12px; padding-top: 12px; border-top: 1px solid #2a3544; font-size: 0.85rem; color: var(--muted); }
-    .nav-hint { font-size: 0.85rem; margin-top: 8px; }
-    .nav-hint a { color: #93c5fd; }
+    .steps-note {
+      margin-top: 14px; padding-top: 14px;
+      border-top: 1px solid var(--card-border);
+      font-size: 0.85rem; color: var(--muted);
+    }
+    .nav-hint { font-size: 0.88rem; margin-top: 14px; text-align: center; }
+    .nav-hint a {
+      color: #c4b5fd;
+      text-decoration: none;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 6px;
+      transition: background 0.2s;
+    }
+    .nav-hint a:hover { background: rgba(124, 58, 237, 0.2); }
+    .trust-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 20px 0 8px;
+    }
+    .trust-chip {
+      text-align: center;
+      padding: 12px 8px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--card-border);
+    }
+    .trust-chip b {
+      display: block;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.1rem;
+      color: var(--accent-4);
+    }
+    .trust-chip span { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; }
+    footer.site-foot {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--card-border);
+    }
   </style>
 </head>
 <body>
+  <div class="bg-mesh" aria-hidden="true"></div>
+  <div class="bg-orbs" aria-hidden="true"><span></span><span></span><span></span></div>
+
   <main>
-    <h1>AI Job Consultancy</h1>
-    <p class="muted">Email only — no phone number. Pay ₹99 to our Amazon Pay UPI wallet, upload resume, we outreach when a verified careers email exists.</p>
+    <header class="hero">
+      <div class="logo-row">
+        <div class="logo-icon" aria-hidden="true">✦</div>
+      </div>
+      <h1>AI Job Consultancy</h1>
+      <p class="hero-tagline">
+        Your profile deserves a <em>powerful push</em> — we help you land in front of hiring teams that match your skills.
+      </p>
+      <p class="hero-sub">
+        Real outreach by email. Smart role matching. A job search experience built to deliver strong, measurable results in your inbox.
+      </p>
+      <div class="pills">
+        <span class="pill pink">AI-matched roles</span>
+        <span class="pill purple">HR outreach</span>
+        <span class="pill cyan">From ₹99</span>
+      </div>
+      <div class="trust-row">
+        <div class="trust-chip"><b>5</b><span>Free applies</span></div>
+        <div class="trust-chip"><b>100%</b><span>Email updates</span></div>
+        <div class="trust-chip"><b>24/7</b><span>Profile live</span></div>
+      </div>
+    </header>
 
     <div class="card disclaimer">
-      <strong>We do not guarantee HR contact or selection.</strong>
+      <strong>Fair &amp; transparent:</strong> We maximise your visibility to verified company contacts. Final hiring decisions always rest with employers — we do not guarantee a job offer.
     </div>
 
-    <div class="card" id="instructions">
-      <h2>Instructions — how this app works</h2>
-      <p class="muted" style="margin-bottom:14px">Everything runs by <strong>email</strong>. We do not call you on phone. Follow these steps in order.</p>
+    <div class="card accent-top" id="instructions">
+      <h2>How it works</h2>
+      <p class="muted" style="margin-bottom:14px">Everything runs by <strong style="color:var(--text)">email</strong> — no phone calls. Follow these steps in order.</p>
       <ol class="steps">
         <li>
           <strong>Pay registration fee (₹99)</strong>
-          <span>Use GPay, PhonePe, Paytm, or Amazon Pay. Pay to the UPI ID shown in Step 1 below. Save the <strong>UTR / reference number</strong> from your payment app.</span>
+          <span>Use GPay, PhonePe, Paytm, or Amazon Pay. Pay to the UPI ID in Step 1. Save your <strong>UTR / reference number</strong>.</span>
         </li>
         <li>
           <strong>Register on this website</strong>
-          <span>Fill Step 2 with your name, email, and UTR. You get a <strong>Seeker ID</strong> (e.g. APS-XXXXXX). We match your UTR with our bank record. This usually takes a short time after payment.</span>
+          <span>Step 2: name, email, UTR. You receive a <strong>Seeker ID</strong> (e.g. APS-XXXXXX). We verify your payment against our records.</span>
         </li>
         <li>
-          <strong>Wait for payment confirmation email</strong>
-          <span>When payment is verified, we email you at the address you gave. That mail has your Seeker ID and a link to upload your resume. You cannot upload until payment is verified.</span>
+          <strong>Payment confirmation email</strong>
+          <span>When verified, we email your Seeker ID and upload link. Resume upload unlocks after verification.</span>
         </li>
         <li>
-          <strong>Upload resume and job preferences</strong>
-          <span>In Step 3, enter Seeker ID, same email, target role, experience, location, and a <strong>resume link</strong> (Google Drive or PDF URL anyone can open). We store your profile for matching.</span>
+          <strong>Upload resume &amp; preferences</strong>
+          <span>Step 3: role, experience, location, and a <strong>resume link</strong> (Google Drive or PDF URL).</span>
         </li>
         <li>
-          <strong>AI finds matching job openings</strong>
-          <span>Our system searches job listings for roles that fit your role, location, and domain. We can <strong>apply your resume to top companies</strong> according to your role when a verified careers path is available.</span>
+          <strong>AI finds matching openings</strong>
+          <span>We search listings and LinkedIn-style leads for roles that fit you — then apply your profile where contact paths exist.</span>
         </li>
         <li>
-          <strong>We email companies only when careers email is verified</strong>
-          <span>For each match, we check for a verified company careers or HR email. If we find one, we send your application with your consent. If there is no verified email, we skip that company — you are <strong>not</strong> notified for skipped ones.</span>
+          <strong>Outreach to hiring contacts</strong>
+          <span>When we have a valid HR or careers email from our process, we send your application with your consent.</span>
         </li>
         <li>
-          <strong>You get email only when your resume was sent</strong>
-          <span>When your resume is actually emailed to a verified careers address, we notify you with company name and role reference. No email means we did not send to HR for that attempt.</span>
+          <strong>You get notified when mail goes out</strong>
+          <span>Email confirmation with company name and reference — so you always know where your resume was sent.</span>
         </li>
         <li>
-          <strong>Track progress</strong>
-          <span>After registration you get <strong>5 company auto-applies</strong> included. Need more? See <a href="#auto-apply-plans">auto-apply plans</a> below. All updates stay on email.</span>
+          <strong>Track your momentum</strong>
+          <span><strong>5 company applies</strong> included. Need more? See <a href="#auto-apply-plans" style="color:#c4b5fd">auto-apply plans</a> below.</span>
         </li>
       </ol>
       <p class="steps-note">
-        <strong>What we never do:</strong> guarantee interview or job. We only apply where a verified company careers or HR email path exists.
+        Built for job seekers who want structure, speed, and serious visibility — not empty promises.
       </p>
-      <p class="nav-hint">Start here: <a href="#upi-card">Step 1 — Pay</a> · <a href="#step-register">Step 2 — Register</a> · <a href="#upload">Step 3 — Resume</a></p>
+      <p class="nav-hint">
+        <a href="#upi-card">Step 1 — Pay</a>
+        <a href="#step-register">Step 2 — Register</a>
+        <a href="#upload">Step 3 — Resume</a>
+      </p>
     </div>
 
-    <div class="card" id="online-pay-card" hidden>
-      <h2>Step 1 — Pay online (automatic)</h2>
+    <div class="card accent-top" id="online-pay-card" hidden>
+      <h2>Step 1 — Pay online</h2>
       <p class="fee" id="fee-online">₹99</p>
-      <p class="muted">UPI / card — payment verifies instantly. No manual UTR check.</p>
+      <p class="muted">UPI / card — instant verification. No manual UTR wait.</p>
       <form id="checkout">
         <label for="name0">Full name</label>
         <input id="name0" required autocomplete="name">
@@ -115,10 +422,10 @@
       <p id="msg0" class="muted"></p>
     </div>
 
-    <div class="card" id="upi-card">
-      <h2>Step 1 — Pay registration (Amazon Pay UPI)</h2>
+    <div class="card accent-top" id="upi-card">
+      <h2>Step 1 — Pay registration</h2>
       <p class="fee" id="fee">₹99</p>
-      <p class="muted">Pay via <strong>Amazon Pay</strong> or any UPI app to this wallet ID, then enter UTR in Step 2.</p>
+      <p class="muted">Pay via <strong>Amazon Pay</strong> or any UPI app, then enter UTR in Step 2.</p>
       <div class="upi-box">
         <p class="muted" style="margin-bottom:8px">Amazon Pay UPI ID</p>
         <p class="upi-id" id="upi-vpa">8595066768@amazonpay</p>
@@ -127,11 +434,11 @@
           <a class="btn" id="upi-pay" href="#">Pay with UPI app</a>
         </div>
       </div>
-      <p class="muted">In GPay / PhonePe / Paytm: Pay → UPI ID → paste above → amount <span id="fee2">₹99</span>.</p>
+      <p class="muted">GPay / PhonePe / Paytm: Pay → UPI ID → paste above → amount <span id="fee2">₹99</span>.</p>
     </div>
 
-    <div class="card" id="step-register">
-      <h2>Step 2 — Register (after UPI pay)</h2>
+    <div class="card accent-top" id="step-register">
+      <h2>Step 2 — Register</h2>
       <form id="reg">
         <label for="name">Full name</label>
         <input id="name" name="name" required autocomplete="name">
@@ -144,16 +451,16 @@
       <p id="msg"></p>
     </div>
 
-    <div class="card" id="auto-apply-plans">
-      <h2>Auto-apply plans &amp; pricing</h2>
-      <p class="muted">Registration starts your profile. We then auto-apply your resume to <strong>top companies</strong> matched to your role (when a verified careers email exists).</p>
+    <div class="card accent-top" id="auto-apply-plans">
+      <h2>Plans &amp; pricing</h2>
+      <p class="muted">Start with registration — then we auto-apply your resume to <strong style="color:var(--text)">top-matched companies</strong> for your role.</p>
       <table class="price-table" aria-label="Pricing">
         <thead>
           <tr><th>Plan</th><th>Auto-applies</th><th>Price</th></tr>
         </thead>
         <tbody>
           <tr class="highlight">
-            <td><strong>Registration</strong> (required first)</td>
+            <td><strong>Registration</strong> (start here)</td>
             <td>5 companies included</td>
             <td>₹99</td>
           </tr>
@@ -180,13 +487,13 @@
         </tbody>
       </table>
       <p class="pack-note">
-        <strong>How to buy extra packs:</strong> Pay the pack amount to the same UPI ID as registration. In the payment note / message, write your <strong>Seeker ID</strong> and pack name (e.g. POST-10). Email us the UTR at the address on your receipt — we add auto-applies to your account after verification.
+        <strong>Extra packs:</strong> Pay to the same UPI ID. In the payment note, write your <strong>Seeker ID</strong> and pack (e.g. POST-10). Email us the UTR — we add applies after verification.
       </p>
-      <p class="muted" style="margin-top:10px">You are emailed only when your resume is sent to a verified HR/careers address. Skipped companies (no verified email) do not use your pack balance.</p>
+      <p class="muted" style="margin-top:10px">You are emailed when your resume is sent. Skipped rows (no contact email) do not use your balance.</p>
     </div>
 
-    <div class="card" id="upload">
-      <h2>Step 3 — Resume (after we verify payment)</h2>
+    <div class="card accent-top" id="upload">
+      <h2>Step 3 — Resume</h2>
       <form id="up">
         <label for="sid">Seeker ID (from email)</label>
         <input id="sid" name="seeker_id" required>
@@ -211,6 +518,10 @@
       </form>
       <p id="msg2"></p>
     </div>
+
+    <footer class="site-foot">
+      AI Job Consultancy · Smart job search, made simple · Email-only support
+    </footer>
   </main>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script>
