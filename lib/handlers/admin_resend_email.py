@@ -48,6 +48,7 @@ class handler(BaseHTTPRequestHandler):
                         "sent": "payment_verified",
                         "seeker_id": seeker_id,
                         "email": email,
+                        "message_id": msg_id,
                         "resend_id": msg_id,
                     },
                 )
@@ -62,6 +63,7 @@ class handler(BaseHTTPRequestHandler):
                         "sent": "receipt",
                         "seeker_id": seeker_id,
                         "email": email,
+                        "message_id": msg_id,
                         "resend_id": msg_id,
                         "note": "Sheet still pending — use Verify or resend with kind=verified for upload link mail",
                     },
@@ -77,6 +79,7 @@ class handler(BaseHTTPRequestHandler):
                     "sent": "payment_verified",
                     "seeker_id": seeker_id,
                     "email": email,
+                    "message_id": msg_id,
                     "resend_id": msg_id,
                 },
             )

@@ -4,3 +4,7 @@ public/payment-qr.png
 __pycache__/
 *.pyc
 .venv/
+data/linkedin-browser-profile/
+data/*.xlsx
+data/*.csv
+!data/.gitkeep

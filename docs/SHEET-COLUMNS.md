@@ -37,7 +37,7 @@
 | K | applied_at |
 | L | hr_message_id |
 
-`status`: skipped_no_email | applied
+`status`: skipped_no_email | linkedin_lead | applied
 
 ## COMPANY_VERIFIED
 

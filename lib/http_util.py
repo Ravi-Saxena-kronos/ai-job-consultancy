@@ -8,11 +8,17 @@ from typing import Any, Optional
 
 
 def read_json(handler: BaseHTTPRequestHandler, max_bytes: int = 1_000_000) -> dict[str, Any]:
-    length = int(handler.headers.get("Content-Length") or 0)
-    if length > max_bytes:
-        raise ValueError("body too large")
-    raw = handler.rfile.read(length) if length else b"{}"
-    data = json.loads(raw.decode() or "{}")
+    cl = handler.headers.get("Content-Length")
+    if cl is not None:
+        length = int(cl)
+        if length > max_bytes:
+            raise ValueError("body too large")
+        raw = handler.rfile.read(length) if length else b"{}"
+    else:
+        raw = handler.rfile.read(max_bytes)
+        if not raw:
+            raw = b"{}"
+    data = json.loads(raw.decode("utf-8", errors="replace") or "{}")
     return data if isinstance(data, dict) else {}
 
 

@@ -18,8 +18,8 @@ Google Cloud → Service account → JSON key → share sheet with `client_email
 |----------|----------|
 | GOOGLE_SERVICE_ACCOUNT_JSON | yes (single-line JSON) |
 | GOOGLE_SHEET_ID | yes |
-| RESEND_API_KEY | yes |
 | EMAIL_FROM | yes |
+| BREVO_API_KEY **or** RESEND_API_KEY **or** SMTP_HOST + SMTP_PASSWORD | yes (one provider) |
 | ADZUNA_APP_ID / ADZUNA_APP_KEY | yes for job search |
 | ADMIN_SECRET | yes |
 | CRON_SECRET | yes |

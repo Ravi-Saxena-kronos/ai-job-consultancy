@@ -1,4 +1,4 @@
-"""POST /api/admin/test_email — send test via Resend and return full API response."""
+"""POST /api/admin/test_email — send test email and return API response."""
 
 from __future__ import annotations
 
@@ -8,6 +8,20 @@ from http.server import BaseHTTPRequestHandler
 from lib import email_send
 from lib.config import env
 from lib.http_util import bearer_secret, read_json, send_json
+
+
+def _provider_hint(provider: str) -> str:
+    if provider == "brevo":
+        return (
+            "Check Brevo → Transactional → Logs. EMAIL_FROM must be a verified sender "
+            "(your Gmail works without owning a domain)."
+        )
+    if provider == "smtp":
+        return "Check SMTP provider logs. For Brevo SMTP use smtp-relay.brevo.com and SMTP key."
+    return (
+        "Check Resend dashboard → Emails. Gmail needs a verified domain on EMAIL_FROM. "
+        "onboarding@resend.dev only delivers to your Resend account email."
+    )
 
 
 class handler(BaseHTTPRequestHandler):
@@ -27,10 +41,11 @@ class handler(BaseHTTPRequestHandler):
                 )
                 return
             from_addr = env("EMAIL_FROM")
+            provider = email_send.email_provider() or "none"
             msg_id = email_send.send_email(
                 to,
                 "AI Job Consultancy — test email",
-                "If you received this, Resend is working for this recipient address.\n",
+                f"If you received this, {provider} email is working for this recipient.\n",
             )
             send_json(
                 self,
@@ -39,23 +54,20 @@ class handler(BaseHTTPRequestHandler):
                     "ok": True,
                     "to": to,
                     "from": from_addr,
+                    "provider": provider,
+                    "message_id": msg_id,
                     "resend_id": msg_id,
-                    "hint": (
-                        "Check Resend dashboard → Emails. If id exists but inbox empty, "
-                        "check spam. Gmail needs a verified domain on EMAIL_FROM."
-                    ),
+                    "hint": _provider_hint(provider),
                 },
             )
         except Exception as err:
+            provider = email_send.email_provider() or "none"
             send_json(
                 self,
                 500,
                 {
                     "error": str(err),
-                    "hint": (
-                        "Common fix: verify your domain in Resend; set EMAIL_FROM to "
-                        "noreply@yourdomain.com. onboarding@resend.dev only delivers to "
-                        "your Resend account email."
-                    ),
+                    "provider": provider,
+                    "hint": _provider_hint(provider),
                 },
             )

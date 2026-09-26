@@ -17,6 +17,7 @@
 | Amazon Pay UPI + UTR | Open `/admin.html` → **Verify** (one click per seeker) |
 | Run jobs early | Admin → **Run job process now** |
 | Import companies | `python scripts/import_companies.py data/companies.csv` |
+| LinkedIn job research | Local: `python scripts/linkedin_jobs_export.py --seeker-id APS-XXXX` — see `docs/LINKEDIN-EXPORT.md` |
 
 ## One-time manual (cannot skip)
 

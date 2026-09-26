@@ -6,7 +6,7 @@ import datetime as dt
 import uuid
 from typing import Any
 
-from . import adzuna, email_send, hr_verify, seekers, sheets
+from . import adzuna, email_send, hr_verify, linkedin_leads, seekers, sheets
 
 
 def _today() -> str:
@@ -117,6 +117,12 @@ def process_one_seeker(seeker: dict[str, str]) -> dict[str, Any]:
         email_send.candidate_applied_email(seeker_email, company, title, app_id)
         applied += 1
         posts_left -= 1
+
+    if posts_left > 0:
+        li = linkedin_leads.apply_linkedin_leads_for_seeker(seeker, posts_left=posts_left)
+        applied += li.get("linkedin_applied", 0)
+        skipped += li.get("linkedin_skipped", 0)
+        posts_left = li.get("posts_left", posts_left)
 
     # Log updated posts count as new seeker row (append-only audit trail)
     if applied or skipped:

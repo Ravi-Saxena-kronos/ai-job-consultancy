@@ -73,17 +73,22 @@ def dispatch(parent: BaseHTTPRequestHandler, method: str) -> None:
             {"error": "not found", "path": path},
         )
         return
-    mod = importlib.import_module(mod_name)
-    hcls = mod.handler
-    sub = hcls(parent.request, parent.client_address, parent.server)
-    sub.path = parent.path
-    sub.headers = parent.headers
-    sub.rfile = parent.rfile
-    sub.wfile = parent.wfile
-    sub.command = parent.command
-    sub.request_version = parent.request_version
-    fn = getattr(sub, f"do_{method}", None)
-    if not fn:
-        send_json(parent, 405, {"error": f"method {method} not allowed"})
-        return
-    fn()
+    try:
+        mod = importlib.import_module(mod_name)
+        hcls = mod.handler
+        fn = getattr(hcls, f"do_{method}", None)
+        if not fn:
+            send_json(parent, 405, {"error": f"method {method} not allowed"})
+            return
+        # Call route handler with Vercel's request object (parent), not a nested instance.
+        fn(parent)
+    except Exception as err:
+        send_json(
+            parent,
+            500,
+            {
+                "error": str(err),
+                "path": path,
+                "hint": "Check Vercel logs. For test email set BREVO_API_KEY + EMAIL_FROM + EMAIL_PROVIDER=brevo.",
+            },
+        )

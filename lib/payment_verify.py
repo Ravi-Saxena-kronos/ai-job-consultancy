@@ -56,13 +56,16 @@ def mark_payment_verified(
     )
     link = seeker_notify.upload_url(seeker_id)
     email_warning = None
-    if env("RESEND_API_KEY") and env("EMAIL_FROM"):
+    if email_send.email_configured():
         try:
             email_send.payment_verified_email(email, seeker_id)
         except Exception as err:
             email_warning = str(err)
     else:
-        email_warning = "RESEND not configured — set RESEND_API_KEY + EMAIL_FROM for production email"
+        email_warning = (
+            "Email not configured — set EMAIL_FROM plus BREVO_API_KEY (no domain), "
+            "RESEND_API_KEY, or SMTP_* on Vercel"
+        )
 
     out = {
         "seeker_id": seeker_id,

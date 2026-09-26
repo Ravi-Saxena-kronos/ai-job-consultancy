@@ -1,49 +1,25 @@
-"""Transactional email via Resend HTTP API."""
+"""Transactional email templates (delivery via Resend, Brevo, or SMTP)."""
 
 from __future__ import annotations
 
-import json
-import urllib.error
-import urllib.request
-
 from .config import env
+from .email_delivery import email_configured, email_provider, send_email as deliver
+
+__all__ = [
+    "send_email",
+    "email_configured",
+    "email_provider",
+    "receipt_email",
+    "payment_verified_email",
+    "admin_pending_payment_email",
+    "resume_received_email",
+    "hr_application_email",
+    "candidate_applied_email",
+]
 
 
 def send_email(to: str, subject: str, text: str) -> str:
-    """Send via Resend. Returns Resend message id on success."""
-    key = env("RESEND_API_KEY")
-    from_addr = env("EMAIL_FROM")
-    if not key or not from_addr:
-        raise RuntimeError("RESEND_API_KEY and EMAIL_FROM must be set on Vercel")
-
-    body = json.dumps(
-        {
-            "from": from_addr,
-            "to": [to],
-            "subject": subject,
-            "text": text,
-        }
-    ).encode()
-    req = urllib.request.Request(
-        "https://api.resend.com/emails",
-        data=body,
-        headers={
-            "Authorization": f"Bearer {key}",
-            "Content-Type": "application/json",
-        },
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            raw = resp.read().decode()
-    except urllib.error.HTTPError as err:
-        detail = err.read().decode()
-        raise RuntimeError(f"Resend HTTP {err.code}: {detail}") from err
-    try:
-        data = json.loads(raw)
-    except json.JSONDecodeError:
-        return raw or "ok"
-    return str(data.get("id") or data.get("message_id") or "ok")
+    return deliver(to, subject, text)
 
 
 def _upload_url(seeker_id: str) -> str:
@@ -91,8 +67,8 @@ def admin_pending_payment_email(seeker_id: str, name: str, email: str, utr: str)
     )
 
 
-def resume_received_email(seeker_email: str, seeker_id: str) -> None:
-    send_email(
+def resume_received_email(seeker_email: str, seeker_id: str) -> str:
+    return send_email(
         seeker_email,
         "Resume received",
         f"Hi,\n\nYour resume for ID {seeker_id} is on file. "
@@ -120,8 +96,8 @@ def hr_application_email(
     send_email(hr_email, f"Application: {title}", body)
 
 
-def candidate_applied_email(seeker_email: str, company: str, title: str, application_id: str) -> None:
-    send_email(
+def candidate_applied_email(seeker_email: str, company: str, title: str, application_id: str) -> str:
+    return send_email(
         seeker_email,
         f"Resume sent — {company}",
         f"Hi,\n\nYour resume was emailed to {company} for the role: {title}.\n"

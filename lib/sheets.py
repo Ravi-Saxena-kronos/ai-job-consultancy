@@ -69,10 +69,70 @@ def _resolve_tab_name(env_key: str, default: str) -> str:
 
 
 def sheet_name(tab: str) -> str:
+    if tab == "APPLICATIONS":
+        return applications_tab_name()
     key, default = _TAB_ENV.get(tab, (tab, tab))
     if tab in _TAB_ENV:
         return _resolve_tab_name(key, default)
     return env(key, default).strip() or default
+
+
+def tab_title_for_gid(gid: int) -> str:
+    meta = _get_sheets_service().spreadsheets().get(spreadsheetId=_sid()).execute()
+    for sheet in meta.get("sheets", []):
+        props = sheet.get("properties", {})
+        if props.get("sheetId") == gid:
+            title = props.get("title")
+            if title:
+                return str(title)
+    raise RuntimeError(f"No sheet tab with gid {gid} in spreadsheet {_sid()}")
+
+
+def applications_tab_name() -> str:
+    raw = env("LINKEDIN_JOBS_GID", "").strip()
+    if raw:
+        try:
+            return tab_title_for_gid(int(raw))
+        except ValueError:
+            pass
+    key, default = _TAB_ENV["APPLICATIONS"]
+    return _resolve_tab_name(key, default)
+
+
+def read_tab(tab_title: str) -> list[list[str]]:
+    result = (
+        _get_sheets_service()
+        .spreadsheets()
+        .values()
+        .get(spreadsheetId=_sid(), range=f"{tab_title}!A:Z")
+        .execute()
+    )
+    return result.get("values") or []
+
+
+def update_tab_row(tab_title: str, row_index: int, values: list[Any]) -> None:
+    """row_index is 1-based sheet row."""
+    end_col = chr(ord("A") + max(len(values) - 1, 0))
+    cell_range = f"{tab_title}!A{row_index}:{end_col}{row_index}"
+    _get_sheets_service().spreadsheets().values().update(
+        spreadsheetId=_sid(),
+        range=cell_range,
+        valueInputOption="USER_ENTERED",
+        body={"values": [values]},
+    ).execute()
+
+
+def append_rows(tab: str, rows: list[list[Any]]) -> None:
+    if not rows:
+        return
+    name = sheet_name(tab) if tab in _TAB_ENV else tab
+    _get_sheets_service().spreadsheets().values().append(
+        spreadsheetId=_sid(),
+        range=f"{name}!A:Z",
+        valueInputOption="USER_ENTERED",
+        insertDataOption="INSERT_ROWS",
+        body={"values": rows},
+    ).execute()
 
 
 def append_row(tab: str, values: list[Any]) -> None:
