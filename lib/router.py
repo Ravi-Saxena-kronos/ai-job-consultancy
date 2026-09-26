@@ -20,6 +20,7 @@ ROUTES: dict[str, str] = {
     "/api/admin/init_sheet": "lib.handlers.admin_init_sheet",
     "/api/admin/resend_email": "lib.handlers.admin_resend_email",
     "/api/admin/test_email": "lib.handlers.admin_test_email",
+    "/api/admin/email_config": "lib.handlers.admin_email_config",
     "/api/admin/whatsapp": "lib.handlers.admin_whatsapp",
     "/api/cron/process": "lib.handlers.cron_process",
     "/api/payment/checkout": "lib.handlers.payment_checkout",

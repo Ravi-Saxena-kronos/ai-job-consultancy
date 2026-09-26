@@ -15,8 +15,10 @@ def _load_dotenv() -> None:
             continue
         key, _, val = line.partition("=")
         key = key.strip()
-        if key and key not in os.environ:
-            os.environ[key] = val.strip().strip('"').strip("'")
+        if not key:
+            continue
+        # Later lines in .env win (e.g. empty BREVO_API_KEY= then real key on next line).
+        os.environ[key] = val.strip().strip('"').strip("'")
 
 
 _load_dotenv()

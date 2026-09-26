@@ -10,7 +10,21 @@ import urllib.request
 from email.message import EmailMessage
 from typing import Callable
 
+import re
+
 from .config import env
+
+_EMAIL_RE = re.compile(r"[^\s<>\"']+@[^\s<>\"']+\.[^\s<>\"']+")
+
+
+def normalize_from_email(raw: str) -> str:
+    """Plain email for APIs (handles 'Name <you@gmail.com>' pasted from Brevo)."""
+    text = (raw or "").strip().strip('"').strip("'")
+    if "<" in text and ">" in text:
+        text = text.split("<", 1)[1].split(">", 1)[0].strip()
+    match = _EMAIL_RE.search(text)
+    email = (match.group(0) if match else text).strip().lower()
+    return email
 
 
 def email_provider() -> str:
@@ -27,14 +41,18 @@ def email_provider() -> str:
     return ""
 
 
+def resolved_from_email() -> str:
+    return normalize_from_email(env("EMAIL_FROM"))
+
+
 def email_configured() -> bool:
-    return bool(env("EMAIL_FROM").strip() and email_provider())
+    return bool(resolved_from_email() and email_provider())
 
 
 def _from_addr() -> str:
-    addr = env("EMAIL_FROM").strip()
-    if not addr:
-        raise RuntimeError("EMAIL_FROM must be set")
+    addr = resolved_from_email()
+    if not addr or "@" not in addr:
+        raise RuntimeError("EMAIL_FROM must be set to a verified sender email (e.g. your@gmail.com)")
     return addr
 
 
@@ -142,7 +160,10 @@ def _http_read(req: urllib.request.Request) -> str:
             return resp.read().decode()
     except urllib.error.HTTPError as err:
         detail = err.read().decode()
-        raise RuntimeError(f"Email API HTTP {err.code}: {detail}") from err
+        msg = f"Email API HTTP {err.code}: {detail}"
+        if "valid sender email" in detail.lower():
+            msg += f" (sender used: {resolved_from_email()!r})"
+        raise RuntimeError(msg) from err
 
 
 _SENDERS: dict[str, Callable[[str, str, str], str]] = {

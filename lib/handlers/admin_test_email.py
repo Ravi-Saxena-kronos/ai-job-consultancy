@@ -7,6 +7,7 @@ from http.server import BaseHTTPRequestHandler
 
 from lib import email_send
 from lib.config import env
+from lib.email_delivery import resolved_from_email
 from lib.http_util import bearer_secret, read_json, send_json
 
 
@@ -40,8 +41,18 @@ class handler(BaseHTTPRequestHandler):
                     {"error": "Provide email in JSON or set ADMIN_NOTIFY_EMAIL on Vercel"},
                 )
                 return
-            from_addr = env("EMAIL_FROM")
+            from_addr = resolved_from_email()
             provider = email_send.email_provider() or "none"
+            if not from_addr or "@" not in from_addr:
+                send_json(
+                    self,
+                    400,
+                    {
+                        "error": "EMAIL_FROM is missing or invalid on Vercel",
+                        "hint": "Set EMAIL_FROM to the exact Gmail you verified in Brevo → Senders.",
+                    },
+                )
+                return
             msg_id = email_send.send_email(
                 to,
                 "AI Job Consultancy — test email",
@@ -68,6 +79,7 @@ class handler(BaseHTTPRequestHandler):
                 {
                     "error": str(err),
                     "provider": provider,
+                    "from_resolved": resolved_from_email(),
                     "hint": _provider_hint(provider),
                 },
             )
