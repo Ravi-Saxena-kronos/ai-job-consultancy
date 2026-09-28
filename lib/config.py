@@ -107,13 +107,42 @@ def google_service_account_info() -> dict:
     return _parse_service_account_json(raw)
 
 
+def _truthy_string(raw: str) -> bool:
+    return raw.strip().strip('"').strip("'").lower() in ("1", "true", "yes", "on")
+
+
 def _env_truthy(name: str) -> bool:
-    raw = env(name, "").strip().strip('"').strip("'").lower()
-    return raw in ("1", "true", "yes", "on")
+    return _truthy_string(env(name, ""))
+
+
+def _test_lab_enabled_from_environ() -> bool:
+    if _env_truthy("TEST_LAB_ENABLED") or _env_truthy("ENABLE_TEST_LAB"):
+        return True
+    for key, val in os.environ.items():
+        upper = key.upper()
+        if upper in ("TEST_LAB_ENABLED", "ENABLE_TEST_LAB") and _truthy_string(val):
+            return True
+    return False
 
 
 def test_lab_enabled() -> bool:
-    return _env_truthy("TEST_LAB_ENABLED")
+    return _test_lab_enabled_from_environ()
+
+
+def test_lab_env_status() -> dict[str, bool | int]:
+    """Safe debug for /api/public_config (no secret values)."""
+    found = False
+    length = 0
+    for key, val in os.environ.items():
+        if key.upper() == "TEST_LAB_ENABLED":
+            found = True
+            length = len(val.strip())
+            break
+    return {
+        "env_key_present": found,
+        "env_value_length": length,
+        "enabled": test_lab_enabled(),
+    }
 
 
 def test_lab_secret() -> str:

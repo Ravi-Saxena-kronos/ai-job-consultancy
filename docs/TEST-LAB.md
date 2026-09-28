@@ -16,12 +16,19 @@ Main site (`/`), register, upload, and admin verify flow are **unchanged**. With
 
 ## Enable on Vercel
 
+This repo sets **`TEST_LAB_ENABLED=true` in `vercel.json`** so Production always sees it after deploy (dashboard-only env vars sometimes do not reach the Python function).
+
+To **turn off** test lab later, remove that block from `vercel.json` or set it to `false`, then redeploy.
+
+Optional dashboard variables (still recommended):
+
 ```
-TEST_LAB_ENABLED=true
 TEST_LAB_SECRET=long-random-string   # optional; defaults to ADMIN_SECRET
 TEST_LAB_MAX_APPLIES=3               # default cap per run
 TEST_HR_REDIRECT=you@gmail.com       # recommended first: HR mail to you only
 ```
+
+`/api/public_config` includes `test_lab`: `{ "env_key_present", "env_value_length", "enabled" }` for debugging.
 
 1. Admin → **Init Google Sheet tabs** (creates **TESTING** tab).
 2. On existing `JOB_APPLICATIONS`, add column **O** header: `testing` (if you added M/N earlier for tailoring).

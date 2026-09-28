@@ -1,6 +1,9 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
+  "env": {
+    "TEST_LAB_ENABLED": "true"
+  },
   "rewrites": [
     { "source": "/api/(.*)", "destination": "/api/index?__path=$1" }
   ],
