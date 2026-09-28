@@ -8,3 +8,4 @@ data/linkedin-browser-profile/
 data/*.xlsx
 data/*.csv
 !data/.gitkeep
+backups/*.tar.gz

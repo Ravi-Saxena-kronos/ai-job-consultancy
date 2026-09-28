@@ -34,6 +34,23 @@ APPLICATIONS_HEADERS = [
     "hr_message_id",
     "tailored_sent",
     "docx_filename",
+    "testing",
+]
+
+TESTING_HEADERS = [
+    "test_id",
+    "name",
+    "email",
+    "resume_url",
+    "target_role",
+    "domain",
+    "location",
+    "experience_years",
+    "max_applies",
+    "status",
+    "created_at",
+    "last_run_at",
+    "notes",
 ]
 
 COMPANIES_HEADERS = [
@@ -47,4 +64,5 @@ TAB_SPECS: dict[str, list[str]] = {
     "SEEKERS": SEEKERS_HEADERS,
     "APPLICATIONS": APPLICATIONS_HEADERS,
     "COMPANIES": COMPANIES_HEADERS,
+    "TESTING": TESTING_HEADERS,
 }

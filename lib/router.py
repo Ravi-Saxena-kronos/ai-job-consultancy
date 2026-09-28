@@ -27,6 +27,8 @@ ROUTES: dict[str, str] = {
     "/api/payment/confirm": "lib.handlers.payment_confirm",
     "/api/payment/status": "lib.handlers.payment_status",
     "/api/payment/razorpay_webhook": "lib.handlers.payment_razorpay_webhook",
+    "/api/test/submit": "lib.handlers.test_submit",
+    "/api/test/run": "lib.handlers.test_run",
 }
 
 

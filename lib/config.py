@@ -105,3 +105,23 @@ def google_service_account_info() -> dict:
             "Copy from Vercel into .env (one line) or set GOOGLE_SERVICE_ACCOUNT_FILE=path/to/key.json"
         )
     return _parse_service_account_json(raw)
+
+
+def test_lab_enabled() -> bool:
+    return env("TEST_LAB_ENABLED", "").strip().lower() in ("1", "true", "yes", "on")
+
+
+def test_lab_secret() -> str:
+    return env("TEST_LAB_SECRET", "").strip() or env("ADMIN_SECRET", "").strip()
+
+
+def test_lab_max_applies() -> int:
+    try:
+        return max(1, min(15, int(env("TEST_LAB_MAX_APPLIES", "3"))))
+    except ValueError:
+        return 3
+
+
+def test_hr_redirect() -> str:
+    """If set, test-lab HR mail goes here instead of real company HR (safe dry run)."""
+    return env("TEST_HR_REDIRECT", "").strip()

@@ -26,6 +26,11 @@ def _today() -> str:
 
 
 def _row_ready_to_send(data: dict[str, str]) -> bool:
+    if (data.get("testing") or "").strip().upper() == "Y":
+        return False
+    seeker = (data.get("seeker_id") or "").strip().upper()
+    if seeker.startswith("TST-") or seeker.startswith("TEST-"):
+        return False
     status = (data.get("status") or "").strip().lower()
     if status == "applied":
         return False

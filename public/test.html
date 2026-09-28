@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Test lab — AI Job Consultancy</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0f1419; color: #e7ecf3; padding: 20px; max-width: 520px; margin: 0 auto; }
+    h1 { font-size: 1.35rem; }
+    .muted { color: #8b98a8; font-size: 0.9rem; line-height: 1.45; }
+    label { display: block; margin-top: 12px; font-size: 0.85rem; }
+    input, textarea, select { width: 100%; padding: 10px; margin-top: 4px; border-radius: 8px; border: 1px solid #2a3544; background: #1a2332; color: #fff; }
+    button { margin-top: 16px; padding: 12px 16px; border: none; border-radius: 8px; background: #7c3aed; color: #fff; cursor: pointer; width: 100%; font-weight: 600; }
+    button.secondary { background: #334155; margin-top: 8px; }
+    .box { background: #422006; border: 1px solid #f59e0b; color: #fde68a; padding: 12px; border-radius: 8px; margin: 16px 0; font-size: 0.85rem; }
+    .ok { color: #4ade80; }
+    .err { color: #f87171; }
+    #gate[hidden], #panel[hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <h1>Test lab</h1>
+  <p class="muted">Try tailored applies with <strong>your</strong> resume. Data goes to the <code>TESTING</code> sheet tab — not paid <code>SEEKERS</code>. Production cron ignores <code>testing=Y</code> rows.</p>
+
+  <div id="disabled" class="box" hidden>
+    Test lab is off on this deployment. Set <code>TEST_LAB_ENABLED=true</code> on Vercel (and redeploy).
+  </div>
+
+  <div id="gate">
+    <label>Lab secret (<code>TEST_LAB_SECRET</code> or <code>ADMIN_SECRET</code>)</label>
+    <input type="password" id="secret" autocomplete="off">
+    <button type="button" id="unlock">Unlock</button>
+  </div>
+
+  <div id="panel" hidden>
+    <div class="box">
+      <strong>Safer first run:</strong> set <code>TEST_HR_REDIRECT=your@gmail.com</code> on Vercel so HR mail goes to you only. Candidate mail still goes to the email below.
+    </div>
+    <form id="form">
+      <label>Name</label>
+      <input name="name" required>
+      <label>Your email (candidate copy)</label>
+      <input name="email" type="email" required>
+      <label>Resume link (public Drive / PDF)</label>
+      <textarea name="resume_url" rows="2" required></textarea>
+      <label>Target role</label>
+      <input name="target_role" placeholder="Java Developer" required>
+      <label>Location</label>
+      <input name="location" value="Delhi NCR">
+      <label>Domain</label>
+      <select name="domain">
+        <option>IT / Software</option>
+        <option>Sales / Business Development</option>
+        <option>Accounts / Finance</option>
+        <option>Other</option>
+      </select>
+      <label>Max companies this run (1–15)</label>
+      <input name="max_applies" type="number" min="1" max="15" value="3">
+      <button type="submit">Save to TESTING sheet &amp; run applies</button>
+    </form>
+    <p id="msg" class="muted"></p>
+  </div>
+
+  <p class="muted" style="margin-top:24px"><a href="/" style="color:#93c5fd">← Main site</a> · <a href="/admin.html" style="color:#93c5fd">Admin</a></p>
+  <script>
+    let secret = ''
+    async function loadConfig() {
+      const res = await fetch('/api/public_config')
+      const c = await res.json()
+      if (!c.test_lab_enabled) {
+        document.getElementById('disabled').hidden = false
+        document.getElementById('gate').hidden = true
+      }
+    }
+    loadConfig()
+    document.getElementById('unlock').onclick = () => {
+      secret = document.getElementById('secret').value.trim()
+      if (!secret) return
+      document.getElementById('gate').hidden = true
+      document.getElementById('panel').hidden = false
+    }
+    function headers() {
+      return { 'Content-Type': 'application/json', Authorization: 'Bearer ' + secret }
+    }
+    document.getElementById('form').onsubmit = async (e) => {
+      e.preventDefault()
+      const msg = document.getElementById('msg')
+      msg.textContent = 'Saving to TESTING tab…'
+      msg.className = 'muted'
+      const fd = new FormData(e.target)
+      const body = Object.fromEntries(fd.entries())
+      const sub = await fetch('/api/test/submit', { method: 'POST', headers: headers(), body: JSON.stringify(body) })
+      const data = await sub.json()
+      if (!sub.ok) { msg.textContent = data.error || 'Submit failed'; msg.className = 'err'; return }
+      msg.textContent = 'Saved ' + data.test_id + '. Running tailored applies…'
+      const run = await fetch('/api/test/run', { method: 'POST', headers: headers(), body: JSON.stringify({ test_id: data.test_id }) })
+      const runData = await run.json()
+      if (!run.ok) { msg.textContent = runData.error || 'Run failed'; msg.className = 'err'; return }
+      const redir = runData.hr_redirect ? ' HR redirect: ' + runData.hr_redirect + '.' : ''
+      msg.innerHTML = '<span class="ok">Done.</span> ' + data.test_id + ' — applied: ' + runData.applied + ', skipped: ' + runData.skipped + '.' + redir + ' Check TESTING + JOB_APPLICATIONS (testing=Y).'
+      msg.className = 'muted'
+    }
+  </script>
+</body>
+</html>

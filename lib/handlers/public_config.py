@@ -7,7 +7,7 @@ from http.server import BaseHTTPRequestHandler
 from urllib.parse import quote
 
 from lib import razorpay_client
-from lib.config import registration_fee_inr, upi_payee_name, upi_vpa
+from lib.config import registration_fee_inr, test_lab_enabled, upi_payee_name, upi_vpa
 from lib.http_util import send_json
 
 
@@ -30,5 +30,6 @@ class handler(BaseHTTPRequestHandler):
                 ),
                 "payment_online": online,
                 "razorpay_key_id": razorpay_client.key_id() if online else "",
+                "test_lab_enabled": test_lab_enabled(),
             },
         )

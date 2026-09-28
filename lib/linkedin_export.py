@@ -159,6 +159,7 @@ def application_row(
         hr_message_id="",
         tailored_sent="",
         docx_filename="",
+        testing="",
     )
 
 
@@ -177,6 +178,7 @@ APPLICATION_HEADERS = [
     "hr_message_id",
     "tailored_sent",
     "docx_filename",
+    "testing",
 ]
 
 
