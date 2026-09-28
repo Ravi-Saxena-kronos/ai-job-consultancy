@@ -96,6 +96,33 @@ def hr_application_email(
     return send_email(hr_email, f"Application: {title}", body)
 
 
+def hr_application_email_docx(
+    hr_email: str,
+    title: str,
+    seeker_name: str,
+    cover_note: str,
+    docx_filename: str,
+    docx_bytes: bytes,
+) -> str:
+    from .email_delivery import send_email_with_attachment
+
+    body = (
+        f"Dear Hiring Team,\n\n"
+        f"A candidate has applied for: {title}\n"
+        f"Candidate: {seeker_name or 'Applicant'}\n\n"
+        f"{cover_note}\n\n"
+        f"Please see the tailored resume attached: {docx_filename}\n\n"
+        "Sent via AI Job Consultancy with the candidate's consent.\n"
+    )
+    return send_email_with_attachment(
+        hr_email,
+        f"Application: {title}",
+        body,
+        attachment_name=docx_filename,
+        attachment_bytes=docx_bytes,
+    )
+
+
 def candidate_applied_email(seeker_email: str, company: str, title: str, application_id: str) -> str:
     return send_email(
         seeker_email,
@@ -103,4 +130,35 @@ def candidate_applied_email(seeker_email: str, company: str, title: str, applica
         f"Hi,\n\nYour resume was emailed to {company} for the role: {title}.\n"
         f"Reference: {application_id}\n\n"
         "We do not guarantee HR contact or selection.\n",
+    )
+
+
+def candidate_tailored_applied_email(
+    seeker_email: str,
+    *,
+    company: str,
+    title: str,
+    application_id: str,
+    target_role: str,
+    filename: str,
+    docx_bytes: bytes,
+) -> str:
+    from .email_delivery import send_email_with_attachment
+
+    body = (
+        f"Hi,\n\n"
+        f"Your tailored resume was sent to HR for this opportunity:\n\n"
+        f"Company: {company}\n"
+        f"Job title: {title}\n"
+        f"Your target role: {target_role or title}\n"
+        f"Reference: {application_id}\n\n"
+        f"The same Word file ({filename}) is attached for your records.\n\n"
+        "We do not guarantee HR contact or selection.\n"
+    )
+    return send_email_with_attachment(
+        seeker_email,
+        f"Resume sent — {company}",
+        body,
+        attachment_name=filename,
+        attachment_bytes=docx_bytes,
     )

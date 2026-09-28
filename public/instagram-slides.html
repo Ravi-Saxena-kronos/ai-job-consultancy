@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AI Job Consultancy — Instagram Carousel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800&family=DM+Sans:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: #111;
+      padding: 24px;
+      color: #fff;
+    }
+    .help {
+      max-width: 1080px;
+      margin: 0 auto 24px;
+      padding: 16px;
+      background: #222;
+      border-radius: 12px;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #ccc;
+    }
+    .help strong { color: #fda4af; }
+    .slides { display: flex; flex-direction: column; align-items: center; gap: 32px; }
+    .slide {
+      width: 1080px;
+      height: 1080px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+    .slide-inner {
+      width: 100%;
+      height: 100%;
+      padding: 72px 64px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .num {
+      position: absolute;
+      top: 48px;
+      right: 56px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 28px;
+      opacity: 0.35;
+    }
+    h2 {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 64px;
+      line-height: 1.08;
+      letter-spacing: -0.02em;
+      margin-bottom: 28px;
+    }
+    h2.sm { font-size: 52px; }
+    p.lead {
+      font-size: 32px;
+      line-height: 1.35;
+      opacity: 0.92;
+      max-width: 900px;
+    }
+    p.sub {
+      font-size: 26px;
+      line-height: 1.4;
+      opacity: 0.85;
+      margin-top: 20px;
+    }
+    .highlight {
+      color: #fde047;
+      font-weight: 700;
+    }
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 36px;
+    }
+    .pill {
+      font-size: 22px;
+      font-weight: 600;
+      padding: 14px 24px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.25);
+    }
+    .steps { list-style: none; margin-top: 24px; }
+    .steps li {
+      font-size: 30px;
+      padding: 18px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .steps li span.badge {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+    .url {
+      font-family: ui-monospace, monospace;
+      font-size: 28px;
+      margin-top: 32px;
+      padding: 20px 28px;
+      background: rgba(0,0,0,0.25);
+      border-radius: 16px;
+      word-break: break-all;
+    }
+    .logo {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 36px;
+      margin-bottom: 16px;
+      opacity: 0.9;
+    }
+    .icon-big {
+      font-size: 120px;
+      line-height: 1;
+      margin-bottom: 24px;
+    }
+    /* Slide themes */
+    .s1 {
+      background: linear-gradient(145deg, #1a0a2e 0%, #4c1d95 50%, #831843 100%);
+    }
+    .s1 h2 {
+      background: linear-gradient(90deg, #fff, #fbcfe8, #c4b5fd);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      font-size: 72px;
+    }
+    .s2 { background: linear-gradient(160deg, #0f172a, #1e3a5f); }
+    .s3 { background: linear-gradient(160deg, #134e4a, #115e59 40%, #0f766e); }
+    .s4 { background: linear-gradient(160deg, #312e81, #5b21b6); }
+    .s5 { background: linear-gradient(160deg, #7c2d12, #c2410c 50%, #ea580c); }
+    .s6 { background: linear-gradient(145deg, #581c87, #db2777, #7c3aed); }
+    .s6 .cta {
+      font-family: 'Outfit', sans-serif;
+      font-size: 40px;
+      font-weight: 800;
+      margin-top: 28px;
+    }
+    @media print {
+      body { background: #fff; padding: 0; }
+      .help { display: none; }
+      .slides { gap: 0; }
+      .slide { page-break-after: always; border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="help">
+    <strong>Instagram carousel export</strong><br>
+    1. Open this file in Chrome (file path or serve from <code>public/</code>).<br>
+    2. Zoom so one slide fills the screen, or use a screenshot tool at <strong>1080×1080</strong> per slide.<br>
+    3. Upload to Instagram as a <strong>carousel</strong> (multiple images).<br>
+    4. Copy caption + hashtags from <code>instagram-caption.txt</code> in the same folder.
+  </div>
+
+  <div class="slides">
+    <section class="slide s1" id="slide-1">
+      <span class="num">1/6</span>
+      <div class="slide-inner">
+        <div class="icon-big">✦</div>
+        <p class="logo">AI Job Consultancy</p>
+        <h2>Stop applying<br>into the void.</h2>
+        <p class="lead">Get your resume in front of <span class="highlight">real hiring contacts</span> — with email proof when it’s sent.</p>
+      </div>
+    </section>
+
+    <section class="slide s2" id="slide-2">
+      <span class="num">2/6</span>
+      <div class="slide-inner">
+        <h2 class="sm">The problem</h2>
+        <p class="lead">100 applications. 2 replies. Sound familiar?</p>
+        <p class="sub">Job portals don’t show you who actually read your CV. Visibility is everything.</p>
+        <div class="pill-row">
+          <span class="pill">No HR contact</span>
+          <span class="pill">Ghosted</span>
+          <span class="pill">Wrong fit</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide s3" id="slide-3">
+      <span class="num">3/6</span>
+      <div class="slide-inner">
+        <h2 class="sm">What we do</h2>
+        <p class="lead">AI-matched roles + <span class="highlight">email outreach</span> to hiring teams.</p>
+        <p class="sub">You get a mail when your resume is actually sent — company name + reference.</p>
+        <div class="pill-row">
+          <span class="pill">DevOps · Dev · IT</span>
+          <span class="pill">Email only</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide s4" id="slide-4">
+      <span class="num">4/6</span>
+      <div class="slide-inner">
+        <h2 class="sm">3 simple steps</h2>
+        <ul class="steps">
+          <li><span class="badge">1</span> Pay ₹99 (UPI)</li>
+          <li><span class="badge">2</span> Register + upload resume link</li>
+          <li><span class="badge">3</span> We apply &amp; email you updates</li>
+        </ul>
+        <p class="sub" style="margin-top:28px"><strong>5 company applies</strong> included with registration.</p>
+      </div>
+    </section>
+
+    <section class="slide s5" id="slide-5">
+      <span class="num">5/6</span>
+      <div class="slide-inner">
+        <h2>Start for<br><span class="highlight">₹99 only</span></h2>
+        <p class="lead">Less than a coffee. More reach than weeks of blind applying.</p>
+        <div class="pill-row">
+          <span class="pill">5 free applies</span>
+          <span class="pill">India-wide</span>
+          <span class="pill">Delhi NCR + remote</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="slide s6" id="slide-6">
+      <span class="num">6/6</span>
+      <div class="slide-inner">
+        <h2 class="sm">Link in bio ↓</h2>
+        <p class="lead">Register today. Your next role deserves a <span class="highlight">real push</span>.</p>
+        <p class="url">ai-job-consultancy.vercel.app</p>
+        <p class="cta">Save · Share · Tag a friend who’s job hunting</p>
+        <p class="sub" style="font-size:20px;margin-top:24px;opacity:0.7">We maximise visibility; employers make final hiring decisions.</p>
+      </div>
+    </section>
+  </div>
+</body>
+</html>

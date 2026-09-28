@@ -1,11 +1,15 @@
-"""Send JOB_APPLICATIONS rows (LinkedIn export) — HR email from sheet, then notify candidate."""
+"""Send JOB_APPLICATIONS rows (LinkedIn export) — tailored DOCX to HR + candidate."""
 
 from __future__ import annotations
 
 import datetime as dt
-from typing import Any
+from typing import Any, Optional
 
-from . import email_send, hr_verify, sheets
+from . import hr_verify, sheets
+from . import tailored_apply
+from .linkedin_export import application_row_from_sheet, job_post_text_for_tailoring
+from .tailored_apply import ResumeCache
+
 
 # Rows ready for batch after LinkedIn export (legacy statuses kept for old sheet rows).
 PENDING_SEND_STATUSES = frozenset(
@@ -55,11 +59,16 @@ def apply_linkedin_leads_for_seeker(
     seeker: dict[str, str],
     *,
     posts_left: int,
+    resume_cache: Optional[ResumeCache] = None,
 ) -> dict[str, Any]:
+    from . import email_send
+
     seeker_id = (seeker.get("seeker_id") or "").strip()
     seeker_email = (seeker.get("email") or "").strip()
     seeker_name = (seeker.get("name") or "").strip()
     resume_url = (seeker.get("resume_url") or "").strip()
+    seeker_role = (seeker.get("target_role") or seeker.get("domain") or "").strip()
+    cache = resume_cache or ResumeCache()
     applied = 0
     skipped = 0
     mail_sent: list[dict[str, str]] = []
@@ -84,20 +93,21 @@ def apply_linkedin_leads_for_seeker(
         title = (row.get("title") or "").strip()
         company = (row.get("company") or "").strip()
         app_id = (row.get("application_id") or "").strip()
-        method = (row.get("verification_method") or "linkedin_export").strip()
-        cover = (
-            f"Please consider this application for {title}. "
-            f"The candidate's experience aligns with the role requirements."
-        )
+        job_text = job_post_text_for_tailoring(row)
 
-        try:
-            hr_msg_id = email_send.hr_application_email(
-                hr_email, title, seeker_name, resume_url, cover
-            )
-            cand_msg_id = email_send.candidate_applied_email(
-                seeker_email, company, title, app_id
-            )
-        except Exception as err:
+        result = tailored_apply.send_tailored_application(
+            seeker_name=seeker_name,
+            seeker_email=seeker_email,
+            seeker_role=seeker_role,
+            resume_url=resume_url,
+            resume_cache=cache,
+            hr_email=hr_email,
+            title=title,
+            company=company,
+            app_id=app_id,
+            job_post_text=job_text,
+        )
+        if not result.get("ok"):
             skipped += 1
             mail_sent.append(
                 {
@@ -105,28 +115,28 @@ def apply_linkedin_leads_for_seeker(
                     "hr_email": hr_email,
                     "company": company,
                     "status": "failed",
-                    "error": str(err)[:200],
+                    "error": str(result.get("error") or "")[:200],
                 }
             )
             continue
 
+        hr_msg_id = result.get("hr_message_id") or ""
+        cand_msg_id = result.get("candidate_message_id") or ""
+        docx_name = result.get("docx_filename") or ""
+        tailored = result.get("tailored_sent") or "Y"
+
         sheets.update_tab_row(
             sheets.applications_tab_name(),
             row_index,
-            [
-                app_id,
-                seeker_id,
-                title,
-                company,
-                row.get("location") or "",
-                row.get("job_url") or "",
-                hr_email,
-                row.get("email_verified") or "Y",
-                method,
-                "applied",
-                _today(),
-                hr_msg_id or "sent",
-            ],
+            application_row_from_sheet(
+                row,
+                hr_email=hr_email,
+                status="applied",
+                applied_at=_today(),
+                hr_message_id=hr_msg_id or "sent",
+                tailored_sent=tailored,
+                docx_filename=docx_name,
+            ),
         )
         applied += 1
         posts_left -= 1
@@ -137,9 +147,11 @@ def apply_linkedin_leads_for_seeker(
                 "company": company,
                 "title": title,
                 "status": "mail_sent",
-                "hr_message_id": hr_msg_id or "",
-                "candidate_message_id": cand_msg_id or "",
+                "hr_message_id": hr_msg_id,
+                "candidate_message_id": cand_msg_id,
                 "candidate_email": seeker_email,
+                "docx_filename": docx_name,
+                "tailored_sent": tailored,
             }
         )
 

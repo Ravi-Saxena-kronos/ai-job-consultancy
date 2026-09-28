@@ -32,6 +32,8 @@ APPLICATIONS_HEADERS = [
     "status",
     "applied_at",
     "hr_message_id",
+    "tailored_sent",
+    "docx_filename",
 ]
 
 COMPANIES_HEADERS = [

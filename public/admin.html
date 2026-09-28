@@ -60,7 +60,7 @@
     <div id="batch-result" hidden style="margin-top:12px">
       <p class="muted"><strong>Batch — mail status</strong></p>
       <table>
-        <thead><tr><th>Seeker</th><th>HR email</th><th>Company</th><th>Status</th></tr></thead>
+        <thead><tr><th>Seeker</th><th>HR email</th><th>Company</th><th>DOCX</th><th>Status</th></tr></thead>
         <tbody id="batch-rows"></tbody>
       </table>
     </div>
@@ -259,7 +259,7 @@
           const st = m.status === 'mail_sent' ? 'mail_sent' : (m.status || 'unknown')
           if (st === 'mail_sent') sent++
           else failed++
-          tr.innerHTML = `<td>${r.seeker_id || ''}</td><td>${m.hr_email || ''}</td><td>${m.company || ''}</td><td class="${st === 'mail_sent' ? 'ok' : 'err'}">${st}</td>`
+          tr.innerHTML = `<td>${r.seeker_id || ''}</td><td>${m.hr_email || ''}</td><td>${m.company || ''}</td><td>${m.docx_filename || '—'}</td><td class="${st === 'mail_sent' ? 'ok' : 'err'}">${st}</td>`
           tbody.appendChild(tr)
         }
       }

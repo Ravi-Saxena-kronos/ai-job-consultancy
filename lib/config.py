@@ -90,7 +90,18 @@ def _parse_service_account_json(raw: str) -> dict:
 
 
 def google_service_account_info() -> dict:
+    file_hint = env("GOOGLE_SERVICE_ACCOUNT_FILE").strip()
+    if file_hint:
+        path = Path(file_hint)
+        if not path.is_file():
+            path = Path(__file__).resolve().parents[1] / file_hint
+        if path.is_file():
+            return _parse_service_account_json(path.read_text(encoding="utf-8"))
+        raise RuntimeError(f"GOOGLE_SERVICE_ACCOUNT_FILE not found: {file_hint}")
     raw = env("GOOGLE_SERVICE_ACCOUNT_JSON")
     if not raw:
-        raise RuntimeError("GOOGLE_SERVICE_ACCOUNT_JSON is not set")
+        raise RuntimeError(
+            "GOOGLE_SERVICE_ACCOUNT_JSON is not set. "
+            "Copy from Vercel into .env (one line) or set GOOGLE_SERVICE_ACCOUNT_FILE=path/to/key.json"
+        )
     return _parse_service_account_json(raw)

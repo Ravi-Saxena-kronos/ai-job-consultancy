@@ -143,20 +143,23 @@ def application_row(
     status = "pending_send" if hr_email else "skipped_no_email"
     app_id = "LNK-" + uuid.uuid4().hex[:8].upper()
     today = dt.date.today().isoformat()
-    return [
-        app_id,
-        seeker_id or "LINKEDIN_EXPORT",
-        job.title,
-        job.company,
-        job.location,
-        normalize_job_url(job.job_url) or job.job_url,
-        hr_email,
-        verified,
-        method,
-        status,
-        today,
-        "",
-    ]
+    return application_row_from_sheet(
+        {},
+        application_id=app_id,
+        seeker_id=seeker_id or "LINKEDIN_EXPORT",
+        title=job.title,
+        company=job.company,
+        location=job.location,
+        job_url=normalize_job_url(job.job_url) or job.job_url,
+        hr_email=hr_email,
+        email_verified=verified,
+        verification_method=method,
+        status=status,
+        applied_at=today,
+        hr_message_id="",
+        tailored_sent="",
+        docx_filename="",
+    )
 
 
 APPLICATION_HEADERS = [
@@ -172,4 +175,27 @@ APPLICATION_HEADERS = [
     "status",
     "applied_at",
     "hr_message_id",
+    "tailored_sent",
+    "docx_filename",
 ]
+
+
+def application_row_from_sheet(data: dict[str, str], **overrides: str) -> list[str]:
+    """Build a row in APPLICATION_HEADERS column order (for sheet append/update)."""
+    merged: dict[str, str] = {h: str(data.get(h, "") or "") for h in APPLICATION_HEADERS}
+    for key, val in overrides.items():
+        if key in APPLICATION_HEADERS:
+            merged[key] = str(val)
+    return [merged[h] for h in APPLICATION_HEADERS]
+
+
+def job_post_text_for_tailoring(data: dict[str, str]) -> str:
+    desc = (data.get("description") or data.get("job_description") or "").strip()
+    if desc:
+        return desc
+    parts = [
+        (data.get("title") or "").strip(),
+        (data.get("company") or "").strip(),
+        (data.get("location") or "").strip(),
+    ]
+    return "\n".join(p for p in parts if p)

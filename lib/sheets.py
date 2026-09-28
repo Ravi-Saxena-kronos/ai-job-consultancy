@@ -89,13 +89,16 @@ def tab_title_for_gid(gid: int) -> str:
 
 
 def applications_tab_name() -> str:
+    """JOB_APPLICATIONS tab: SHEET_APPLICATIONS name beats LINKEDIN_JOBS_GID."""
+    key, default = _TAB_ENV["APPLICATIONS"]
+    if env(key, "").strip():
+        return _resolve_tab_name(key, default)
     raw = env("LINKEDIN_JOBS_GID", "").strip()
     if raw:
         try:
             return tab_title_for_gid(int(raw))
-        except ValueError:
+        except (ValueError, RuntimeError):
             pass
-    key, default = _TAB_ENV["APPLICATIONS"]
     return _resolve_tab_name(key, default)
 
 

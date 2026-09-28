@@ -6,7 +6,9 @@ import datetime as dt
 import uuid
 from typing import Any
 
-from . import adzuna, email_send, hr_verify, linkedin_leads, seekers, sheets
+from . import adzuna, hr_verify, linkedin_leads, seekers, sheets
+from .linkedin_export import application_row_from_sheet
+from .tailored_apply import ResumeCache
 
 
 def _today() -> str:
@@ -49,9 +51,13 @@ def process_one_seeker(seeker: dict[str, str]) -> dict[str, Any]:
     resume_url = seeker.get("resume_url") or ""
     companies = sheets.rows_as_dicts("COMPANIES")
     mail_sent: list[dict[str, str]] = []
+    seeker_role = seeker.get("target_role") or seeker.get("domain") or "developer"
+    resume_cache = ResumeCache()
 
     # JOB_APPLICATIONS (LinkedIn export) first — uses hr_email from sheet.
-    li = linkedin_leads.apply_linkedin_leads_for_seeker(seeker, posts_left=posts_left)
+    li = linkedin_leads.apply_linkedin_leads_for_seeker(
+        seeker, posts_left=posts_left, resume_cache=resume_cache
+    )
     applied = li.get("linkedin_applied", 0)
     skipped = li.get("linkedin_skipped", 0)
     posts_left = li.get("posts_left", posts_left)
@@ -86,54 +92,76 @@ def process_one_seeker(seeker: dict[str, str]) -> dict[str, Any]:
         if not hr_email or not hr_verify.verified_enough(hr_email, source):
             sheets.append_row(
                 "APPLICATIONS",
-                [
-                    app_id,
-                    seeker_id,
-                    title,
-                    company,
-                    job.get("location"),
-                    job.get("job_url"),
-                    hr_email or "",
-                    "N",
-                    source,
-                    "skipped_no_email",
-                    _today(),
-                    "",
-                ],
+                application_row_from_sheet(
+                    {},
+                    application_id=app_id,
+                    seeker_id=seeker_id,
+                    title=title,
+                    company=company,
+                    location=job.get("location") or "",
+                    job_url=job.get("job_url") or "",
+                    hr_email=hr_email or "",
+                    email_verified="N",
+                    verification_method=source,
+                    status="skipped_no_email",
+                    applied_at=_today(),
+                ),
             )
             skipped += 1
             continue
 
-        cover = (
-            f"Please consider this application for {title}. "
-            f"The candidate's experience aligns with the role requirements."
+        from . import tailored_apply
+
+        job_text = (job.get("description") or "") or f"{title}\n{company}"
+        result = tailored_apply.send_tailored_application(
+            seeker_name=seeker_name,
+            seeker_email=seeker_email,
+            seeker_role=seeker_role,
+            resume_url=resume_url,
+            resume_cache=resume_cache,
+            hr_email=hr_email,
+            title=title,
+            company=company,
+            app_id=app_id,
+            job_post_text=job_text,
         )
-        hr_msg_id = email_send.hr_application_email(
-            hr_email,
-            title,
-            seeker_name,
-            resume_url,
-            cover,
-        )
+        if not result.get("ok"):
+            skipped += 1
+            mail_sent.append(
+                {
+                    "application_id": app_id,
+                    "hr_email": hr_email,
+                    "company": company,
+                    "status": "failed",
+                    "error": str(result.get("error") or "")[:200],
+                }
+            )
+            continue
+
+        hr_msg_id = result.get("hr_message_id") or ""
+        cand_msg_id = result.get("candidate_message_id") or ""
+        docx_name = result.get("docx_filename") or ""
 
         sheets.append_row(
             "APPLICATIONS",
-            [
-                app_id,
-                seeker_id,
-                title,
-                company,
-                job.get("location"),
-                job.get("job_url"),
-                hr_email,
-                "Y",
-                source,
-                "applied",
-                _today(),
-                hr_msg_id or "sent",
-            ],
+            application_row_from_sheet(
+                {},
+                application_id=app_id,
+                seeker_id=seeker_id,
+                title=title,
+                company=company,
+                location=job.get("location") or "",
+                job_url=job.get("job_url") or "",
+                hr_email=hr_email,
+                email_verified="Y",
+                verification_method=source,
+                status="applied",
+                applied_at=_today(),
+                hr_message_id=hr_msg_id or "sent",
+                tailored_sent=result.get("tailored_sent") or "Y",
+                docx_filename=docx_name,
+            ),
         )
-        cand_msg_id = email_send.candidate_applied_email(seeker_email, company, title, app_id)
         applied += 1
         posts_left -= 1
         mail_sent.append(
@@ -143,9 +171,11 @@ def process_one_seeker(seeker: dict[str, str]) -> dict[str, Any]:
                 "company": company,
                 "title": title,
                 "status": "mail_sent",
-                "hr_message_id": hr_msg_id or "",
-                "candidate_message_id": cand_msg_id or "",
+                "hr_message_id": hr_msg_id,
+                "candidate_message_id": cand_msg_id,
                 "candidate_email": seeker_email,
+                "docx_filename": docx_name,
+                "tailored_sent": result.get("tailored_sent") or "Y",
             }
         )
 

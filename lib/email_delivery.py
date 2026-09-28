@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import base64
 import json
 import smtplib
 import ssl
 import urllib.error
 import urllib.request
 from email.message import EmailMessage
-from typing import Callable
+from typing import Callable, Optional
 
 import re
 
@@ -90,19 +91,32 @@ def _from_name() -> str:
     return "AI Job Consultancy"
 
 
-def _send_resend(to: str, subject: str, text: str) -> str:
+def _send_resend(
+    to: str,
+    subject: str,
+    text: str,
+    *,
+    attachment_name: Optional[str] = None,
+    attachment_bytes: Optional[bytes] = None,
+) -> str:
     key = env("RESEND_API_KEY")
     if not key:
         raise RuntimeError("RESEND_API_KEY is not set")
     from_addr = _from_addr()
-    body = json.dumps(
-        {
-            "from": from_addr,
-            "to": [to],
-            "subject": subject,
-            "text": text,
-        }
-    ).encode()
+    payload: dict = {
+        "from": from_addr,
+        "to": [to],
+        "subject": subject,
+        "text": text,
+    }
+    if attachment_name and attachment_bytes:
+        payload["attachments"] = [
+            {
+                "filename": attachment_name,
+                "content": base64.b64encode(attachment_bytes).decode("ascii"),
+            }
+        ]
+    body = json.dumps(payload).encode()
     req = urllib.request.Request(
         "https://api.resend.com/emails",
         data=body,
@@ -120,17 +134,31 @@ def _send_resend(to: str, subject: str, text: str) -> str:
     return str(data.get("id") or data.get("message_id") or "ok")
 
 
-def _send_brevo(to: str, subject: str, text: str) -> str:
+def _send_brevo(
+    to: str,
+    subject: str,
+    text: str,
+    *,
+    attachment_name: Optional[str] = None,
+    attachment_bytes: Optional[bytes] = None,
+) -> str:
     key = env("BREVO_API_KEY")
     if not key:
         raise RuntimeError("BREVO_API_KEY is not set")
     from_addr = _from_addr()
-    payload = {
+    payload: dict = {
         "sender": {"name": _from_name(), "email": from_addr},
         "to": [{"email": to}],
         "subject": subject,
         "textContent": text,
     }
+    if attachment_name and attachment_bytes:
+        payload["attachment"] = [
+            {
+                "name": attachment_name,
+                "content": base64.b64encode(attachment_bytes).decode("ascii"),
+            }
+        ]
     body = json.dumps(payload).encode()
     req = urllib.request.Request(
         "https://api.brevo.com/v3/smtp/email",
@@ -150,7 +178,14 @@ def _send_brevo(to: str, subject: str, text: str) -> str:
     return str(data.get("messageId") or data.get("message_id") or "ok")
 
 
-def _send_smtp(to: str, subject: str, text: str) -> str:
+def _send_smtp(
+    to: str,
+    subject: str,
+    text: str,
+    *,
+    attachment_name: Optional[str] = None,
+    attachment_bytes: Optional[bytes] = None,
+) -> str:
     host = env("SMTP_HOST").strip()
     if not host:
         raise RuntimeError("SMTP_HOST is not set")
@@ -168,6 +203,13 @@ def _send_smtp(to: str, subject: str, text: str) -> str:
     msg["From"] = f"{_from_name()} <{_from_addr()}>"
     msg["To"] = to
     msg.set_content(text)
+    if attachment_name and attachment_bytes:
+        msg.add_attachment(
+            attachment_bytes,
+            maintype="application",
+            subtype="vnd.openxmlformats-officedocument.wordprocessingml.document",
+            filename=attachment_name,
+        )
 
     if port == 465:
         with smtplib.SMTP_SSL(host, port, context=ssl.create_default_context()) as smtp:
@@ -196,22 +238,48 @@ def _http_read(req: urllib.request.Request) -> str:
         raise RuntimeError(msg) from err
 
 
-_SENDERS: dict[str, Callable[[str, str, str], str]] = {
-    "resend": _send_resend,
-    "brevo": _send_brevo,
-    "smtp": _send_smtp,
-}
-
-
 def send_email(to: str, subject: str, text: str) -> str:
     """Send email. Returns provider message id (or sentinel string)."""
+    return send_email_with_attachment(to, subject, text)
+
+
+def send_email_with_attachment(
+    to: str,
+    subject: str,
+    text: str,
+    *,
+    attachment_name: Optional[str] = None,
+    attachment_bytes: Optional[bytes] = None,
+) -> str:
     provider = email_provider()
     if not provider:
         raise RuntimeError(
             "No email provider configured. Set RESEND_API_KEY, BREVO_API_KEY, "
             "or SMTP_HOST + SMTP_PASSWORD (and EMAIL_FROM)."
         )
-    fn = _SENDERS.get(provider)
-    if not fn:
-        raise RuntimeError(f"Unknown EMAIL_PROVIDER: {provider}")
-    return fn(to.strip(), subject, text)
+    to = to.strip()
+    if provider == "brevo":
+        return _send_brevo(
+            to,
+            subject,
+            text,
+            attachment_name=attachment_name,
+            attachment_bytes=attachment_bytes,
+        )
+    if provider == "resend":
+        return _send_resend(
+            to,
+            subject,
+            text,
+            attachment_name=attachment_name,
+            attachment_bytes=attachment_bytes,
+        )
+    if provider == "smtp":
+        return _send_smtp(
+            to,
+            subject,
+            text,
+            attachment_name=attachment_name,
+            attachment_bytes=attachment_bytes,
+        )
+    raise RuntimeError(f"Unknown EMAIL_PROVIDER: {provider}")
