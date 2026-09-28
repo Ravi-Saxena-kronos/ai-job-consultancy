@@ -22,9 +22,7 @@
   <h1>Test lab</h1>
   <p class="muted">Try tailored applies with <strong>your</strong> resume. Data goes to the <code>TESTING</code> sheet tab — not paid <code>SEEKERS</code>. Production cron ignores <code>testing=Y</code> rows.</p>
 
-  <div id="disabled" class="box" hidden>
-    Test lab is off on this deployment. Set <code>TEST_LAB_ENABLED=true</code> on Vercel (and redeploy).
-  </div>
+  <div id="disabled" class="box" hidden></div>
 
   <div id="gate">
     <label>Lab secret (<code>TEST_LAB_SECRET</code> or <code>ADMIN_SECRET</code>)</label>
@@ -65,12 +63,34 @@
   <script>
     let secret = ''
     async function loadConfig() {
-      const res = await fetch('/api/public_config')
-      const c = await res.json()
-      if (!c.test_lab_enabled) {
-        document.getElementById('disabled').hidden = false
+      const box = document.getElementById('disabled')
+      let c = {}
+      try {
+        const res = await fetch('/api/public_config', { cache: 'no-store' })
+        c = await res.json()
+      } catch (_) {
+        box.innerHTML = 'Could not reach <code>/api/public_config</code>. Open this page from your live site URL (not <code>file://</code>).'
+        box.hidden = false
         document.getElementById('gate').hidden = true
+        return
       }
+      if (c.test_lab_enabled === true) {
+        box.hidden = true
+        return
+      }
+      let html = 'Test lab is <strong>off</strong> on this deployment.'
+      if (c.test_lab_enabled === undefined) {
+        html += '<br><br><strong>Old deploy:</strong> API has no <code>test_lab_enabled</code> field. Push latest code and wait for Vercel build to finish.'
+      } else {
+        html += '<br><br><strong>Vercel checklist:</strong><ol style="margin:8px 0 0 18px">'
+        html += '<li>Settings → Environment Variables → <code>TEST_LAB_ENABLED</code> = <code>true</code></li>'
+        html += '<li>Enable for <strong>Production</strong> (not only Preview)</li>'
+        html += '<li>Deployments → latest → <strong>Redeploy</strong> (env changes do not apply until redeploy)</li></ol>'
+      }
+      html += '<br>Quick check: <a href="/api/public_config" style="color:#93c5fd">/api/public_config</a> should show <code>"test_lab_enabled":true</code>.'
+      box.innerHTML = html
+      box.hidden = false
+      document.getElementById('gate').hidden = true
     }
     loadConfig()
     document.getElementById('unlock').onclick = () => {

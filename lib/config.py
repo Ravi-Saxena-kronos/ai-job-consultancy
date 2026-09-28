@@ -107,8 +107,13 @@ def google_service_account_info() -> dict:
     return _parse_service_account_json(raw)
 
 
+def _env_truthy(name: str) -> bool:
+    raw = env(name, "").strip().strip('"').strip("'").lower()
+    return raw in ("1", "true", "yes", "on")
+
+
 def test_lab_enabled() -> bool:
-    return env("TEST_LAB_ENABLED", "").strip().lower() in ("1", "true", "yes", "on")
+    return _env_truthy("TEST_LAB_ENABLED")
 
 
 def test_lab_secret() -> str:
